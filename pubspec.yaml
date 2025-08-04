@@ -1,0 +1,45 @@
+name: soma
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flutter_svg: ^2.0.10+1
+  http: ^1.2.1
+  shared_preferences: ^2.2.3
+  google_sign_in: ^6.2.1
+  flutter_quill: ^9.2.3
+  image_picker: ^1.1.2
+  emoji_picker_flutter: ^2.2.0
+  flutter_keyboard_visibility: ^6.0.0
+  provider: ^6.1.2
+  google_fonts: ^6.2.1
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/google_fonts/
+    - assets/images/
+    - assets/images/landing_page_hero1.jpg
+    - assets/images/google_logo.png
+    - assets/images/stories/story1.jpg
+    - assets/images/stories/story2.jpg
+    - assets/images/stories/story3.jpg
+
+  fonts:
+    - family: PlaywriteQLD
+      fonts:
+        - asset: assets/google_fonts/static/PlaywriteAUQLD-Regular.ttf

@@ -1,0 +1,371 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:soma/features/profile_page/viewmodels/profile_page_viewmodel.dart';
+
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => ProfilePageViewModel(),
+      child: Consumer<ProfilePageViewModel>(
+        builder: (context, viewModel, child) {
+          const double backgroundHeight = 250;
+          const double profileImageRadius = 60;
+
+          return Scaffold(
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              flexibleSpace: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xD1E4FFFF), Color(0xD1E4FFFF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+            ),
+            extendBodyBehindAppBar: true,
+            body: viewModel.errorMessage.isNotEmpty
+                ? Center(
+                    child: Text(
+                      viewModel.errorMessage,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  )
+                : viewModel.userData == null
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        // Header Section
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            // Background Image
+                            Container(
+                              height: backgroundHeight,
+                              decoration: const BoxDecoration(
+                                color: Color(0xD1E4FFFF),
+                                borderRadius: BorderRadius.vertical(
+                                  bottom: Radius.circular(10),
+                                ),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: const BorderRadius.vertical(
+                                  bottom: Radius.circular(10),
+                                ),
+                                child: Image.network(
+                                  'https://images.pexels.com/photos/1687193/pexels-photo-1687193.jpeg',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Center(
+                                        child: Icon(
+                                          Icons.image_not_supported,
+                                          color: Colors.white,
+                                          size: 50,
+                                        ),
+                                      ),
+                                ),
+                              ),
+                            ),
+                            // Profile Picture (centered at bottom of background)
+                            Positioned(
+                              top: backgroundHeight - profileImageRadius,
+                              left:
+                                  MediaQuery.of(context).size.width / 2 -
+                                  profileImageRadius,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 4,
+                                  ),
+                                ),
+                                child: CircleAvatar(
+                                  radius: profileImageRadius,
+                                  backgroundImage: const NetworkImage(
+                                    'https://images.pexels.com/photos/2975709/pexels-photo-2975709.jpeg',
+                                  ),
+                                  backgroundColor: Colors.grey.shade200,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: profileImageRadius + 10),
+                        // User Name
+                        Text(
+                          viewModel.userData!['name'] ?? 'George Mukabi',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // User Stats
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              children: const [
+                                Icon(
+                                  Icons.arrow_upward,
+                                  size: 16,
+                                  color: Colors.green,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  '1K',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                              ],
+                            ),
+                            Row(
+                              children: const [
+                                Icon(
+                                  Icons.remove_red_eye_outlined,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  '2K',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                children: const [
+                                  Icon(
+                                    Icons.wallet,
+                                    size: 18,
+                                    color: Colors.black54,
+                                  ),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    '24 Tokens',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        // Action Buttons
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildCustomActionButton(
+                                icon: Icons.wallet,
+                                label: 'Top up',
+                                onPressed: () =>
+                                    viewModel.showTopUpDialog(context),
+                                backgroundColor: const Color(0xFFF0E6FF),
+                                iconColor: const Color(0xD1E4FFFF),
+                              ),
+                              _buildCustomActionButton(
+                                icon: Icons.upload,
+                                label: 'Top up',
+                                onPressed: () =>
+                                    viewModel.showTopUpDialog(context),
+                                backgroundColor: const Color(0xFFE0B0FF),
+                                iconColor: const Color(0xD1E4FFFF),
+                              ),
+                              _buildCustomActionButton(
+                                icon: Icons.payment,
+                                label: 'Withdraw',
+                                onPressed: () =>
+                                    viewModel.showWithdrawDialog(context),
+                                backgroundColor: const Color(0xFFF0E6FF),
+                                iconColor: const Color(0xD1E4FFFF),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        // Recent Reads Section
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Recent Reads',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  // Handle view all recent reads
+                                },
+                                child: const Text(
+                                  'View All',
+                                  style: TextStyle(
+                                    color: Color(0xD1E4FFFF),
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        _buildRecentReadItem(
+                          title: 'The Cowherd of the Savannah',
+                          author: 'George Mukabi',
+                          date: 'Jan 3, 2022',
+                        ),
+                        _buildRecentReadItem(
+                          title: 'The Cowherd of the Savannah',
+                          author: 'George Mukabi',
+                          date: 'Jan 3, 2022',
+                        ),
+                        _buildRecentReadItem(
+                          title: 'The Cowherd of the Savannah',
+                          author: 'George Mukabi',
+                          date: 'Jan 3, 2022',
+                        ),
+                      ],
+                    ),
+                  ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Top up, wihthdarwal and others items
+  Widget _buildCustomActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    required Color backgroundColor,
+    required Color iconColor,
+  }) {
+    return Column(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            icon: Icon(icon, size: 20, color: iconColor),
+            onPressed: onPressed,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 14, color: Colors.black87),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecentReadItem({
+    required String title,
+    required String author,
+    required String date,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // container for Recent Reads
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              image: const DecorationImage(
+                image: NetworkImage(
+                  'https://images.pexels.com/photos/986857/pexels-photo-986857.jpeg',
+                ),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Title: $title',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  'By: $author',
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                date,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              Row(
+                children: const [
+                  Icon(Icons.arrow_upward, size: 12, color: Colors.green),
+                  Text('1K', style: TextStyle(fontSize: 12)),
+                  SizedBox(width: 8),
+                  Icon(
+                    Icons.remove_red_eye_outlined,
+                    size: 12,
+                    color: Colors.grey,
+                  ),
+                  Text('2K', style: TextStyle(fontSize: 12)),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}

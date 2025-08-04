@@ -1,0 +1,180 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../core/config/environment.dart'; // Corrected import path
+
+const String apiUrl = '${Environment.backendUrl}/api/stories'; // Moved to top-level
+
+class AddStoryViewModel extends ChangeNotifier {
+  final QuillController _controller = QuillController.basic();
+  final TextEditingController _titleController = TextEditingController();
+  String _errorMessage = '';
+  bool _isLoading = false;
+
+  QuillController get controller => _controller;
+  TextEditingController get titleController => _titleController;
+  String get errorMessage => _errorMessage;
+  bool get isLoading => _isLoading;
+
+  AddStoryViewModel() {
+    _loadSavedStory();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _titleController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadSavedStory() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? savedTitle = prefs.getString('draft_story_title');
+    final String? savedContent = prefs.getString('draft_story_content');
+
+    if (savedTitle != null && savedContent != null) {
+      _titleController.text = savedTitle;
+      try {
+        _controller.document = Document.fromJson(jsonDecode(savedContent));
+      } catch (e) {
+        
+        _controller.document = Document();
+      }
+    }
+    notifyListeners();
+  }
+
+  Future<void> saveStoryLocally(BuildContext context) async {
+    _isLoading = true;
+    _errorMessage = '';
+    notifyListeners();
+
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('draft_story_title', _titleController.text);
+      await prefs.setString(
+        'draft_story_content',
+        jsonEncode(_controller.document.toDelta().toJson()),
+      );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Story saved as draft locally!')),
+      );
+    } catch (e) {
+      _errorMessage = 'Failed to save story locally: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> publishStory(BuildContext context) async {
+    _isLoading = true;
+    _errorMessage = '';
+    notifyListeners();
+
+    final String title = _titleController.text.trim();
+    final String content = jsonEncode(_controller.document.toDelta().toJson());
+
+    if (title.isEmpty || _controller.document.toPlainText().trim().isEmpty) {
+      _errorMessage = 'Title and content cannot be empty.';
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      _errorMessage = 'No authentication token found. Please log in.';
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{'title': title, 'content': content}),
+      );
+
+      if (response.statusCode == 201) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Story published successfully!')),
+        );
+        _titleController.clear();
+        _controller.clear();
+        await prefs.remove('draft_story_title');
+        await prefs.remove('draft_story_content');
+      } else {
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        _errorMessage = errorData['message'] ?? 'Failed to publish story.';
+      }
+    } catch (e) {
+      _errorMessage = 'An error occurred: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void toggleBold() {
+    _controller.formatSelection(Attribute.bold);
+  }
+
+  void toggleItalic() {
+    _controller.formatSelection(Attribute.italic);
+  }
+
+  void toggleUnderline() {
+    _controller.formatSelection(Attribute.underline);
+  }
+
+  void toggleStrikeThrough() {
+    _controller.formatSelection(Attribute.strikeThrough);
+  }
+
+  void toggleLink() {
+    // This is a simplified toggle. A real link button would open a dialog to get the URL.
+    _controller.formatSelection(Attribute.link);
+  }
+
+  void clearFormatting() {
+    _controller.formatSelection(Attribute.clone(Attribute.background, null));
+    _controller.formatSelection(Attribute.clone(Attribute.color, null));
+    _controller.formatSelection(Attribute.clone(Attribute.font, null));
+    _controller.formatSelection(Attribute.clone(Attribute.size, null));
+    _controller.formatSelection(Attribute.clone(Attribute.bold, null));
+    _controller.formatSelection(Attribute.clone(Attribute.italic, null));
+    _controller.formatSelection(Attribute.clone(Attribute.underline, null));
+    _controller.formatSelection(Attribute.clone(Attribute.strikeThrough, null));
+    _controller.formatSelection(Attribute.clone(Attribute.link, null));
+    _controller.formatSelection(Attribute.clone(Attribute.align, null));
+    _controller.formatSelection(Attribute.clone(Attribute.direction, null));
+    _controller.formatSelection(Attribute.clone(Attribute.list, null));
+    _controller.formatSelection(Attribute.clone(Attribute.codeBlock, null));
+    _controller.formatSelection(Attribute.clone(Attribute.blockQuote, null));
+    _controller.formatSelection(Attribute.clone(Attribute.header, null));
+  }
+
+  Future<void> pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      _controller.document.insert(
+        _controller.selection.extentOffset,
+        '\n![Image: ${image.name}]()\n',
+      );
+    }
+  }
+}
