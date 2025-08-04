@@ -1,9 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soma/core/services/image_upload_service.dart';
 
 import '../../../core/config/environment.dart'; // Corrected import path
 
@@ -97,6 +99,21 @@ class AddStoryViewModel extends ChangeNotifier {
       return;
     }
 
+    // Extract image URLs from Quill content
+    final List<String> bodyImageUrls = [];
+    String? thumbnailUrl;
+
+    final docJson = _controller.document.toDelta().toJson();
+    for (var op in docJson) {
+      if (op['insert'] is Map && op['insert'].containsKey('image')) {
+        final imageUrl = op['insert']['image'];
+        bodyImageUrls.add(imageUrl);
+        if (thumbnailUrl == null) {
+          thumbnailUrl = imageUrl; // Set the first image as thumbnail
+        }
+      }
+    }
+
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
@@ -104,7 +121,12 @@ class AddStoryViewModel extends ChangeNotifier {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',
         },
-        body: jsonEncode(<String, String>{'title': title, 'content': content}),
+        body: jsonEncode({
+          'title': title,
+          'content': content,
+          'thumbnailUrl': thumbnailUrl,
+          'bodyImageUrls': bodyImageUrls,
+        }),
       );
 
       if (response.statusCode == 201) {
@@ -171,10 +193,20 @@ class AddStoryViewModel extends ChangeNotifier {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
-      _controller.document.insert(
-        _controller.selection.extentOffset,
-        '\n![Image: ${image.name}]()\n',
-      );
+      _isLoading = true;
+      notifyListeners();
+      try {
+        final imageUrl = await ImageUploadService.uploadImage(File(image.path));
+        _controller.document.insert(
+          _controller.selection.extentOffset,
+          BlockEmbed.image(imageUrl),
+        );
+      } catch (e) {
+        _errorMessage = 'Failed to upload image: $e';
+      } finally {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 }

@@ -12,12 +12,7 @@ class LoginPage extends StatelessWidget {
       child: Consumer<LoginPageViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(
-            backgroundColor: const Color.fromARGB(
-              255,
-              200,
-              233,
-              255,
-            ), //  for the whole page
+            backgroundColor: const Color.fromARGB(255, 232, 246, 255), //  for the whole page
             body: SafeArea(
               child: Column(
                 children: [

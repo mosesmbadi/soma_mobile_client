@@ -81,22 +81,61 @@ class LoginPageViewModel extends ChangeNotifier {
   }
 
   Future<void> handleGoogleSignIn(BuildContext context) async {
+    _errorMessage = ''; // Clear previous errors
+    notifyListeners();
     try {
+      print('Attempting Google Sign-In...');
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
       if (googleUser != null) {
-        
-        // TODO: Send googleUser.idToken to your backend for verification and authentication
-        // Your backend should then return its own JWT token.
-        // For now, just navigate to home page as a placeholder
-        if (context.mounted) {
-          Navigator.pushReplacementNamed(context, '/home');
+        print('Google user obtained: ${googleUser.email}');
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final String? idToken = googleAuth.idToken;
+
+        if (idToken != null) {
+          print('Google ID Token obtained. Sending to backend...');
+          print('Backend URL: ${Environment.googleSignInApiUrl}');
+          final response = await http.post(
+            Uri.parse(Environment.googleSignInApiUrl),
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: jsonEncode(<String, String>{
+              'idToken': idToken,
+            }),
+          );
+
+          print('Backend response status: ${response.statusCode}');
+          print('Backend response body: ${response.body}');
+
+          if (response.statusCode == 200) {
+            final Map<String, dynamic> responseData = jsonDecode(response.body);
+            final String token = responseData['token'];
+            await SharedPreferences.getInstance().then((prefs) {
+              prefs.setString('jwt_token', token);
+            });
+            print('Successfully received JWT from backend. Navigating to home.');
+
+            if (context.mounted) {
+              Navigator.pushReplacementNamed(context, '/home');
+            }
+          } else {
+            final Map<String, dynamic> errorData = jsonDecode(response.body);
+            _errorMessage = errorData['message'] ?? 'Google Sign-In failed on server. Please try again.';
+            print('Backend error: $_errorMessage');
+          }
+        } else {
+          _errorMessage = 'Failed to get Google ID Token.';
+          print('Error: Failed to get Google ID Token.');
         }
       } else {
-        
+        _errorMessage = 'Google Sign-In cancelled by user or failed to get user.';
+        print('Google Sign-In cancelled or failed to get user.');
       }
     } catch (error) {
-      
-      _errorMessage = 'Google Sign-In failed. Please try again.';
+      _errorMessage = 'Google Sign-In failed. An unexpected error occurred: $error';
+      print('Caught exception during Google Sign-In: $error');
+    } finally {
       notifyListeners();
     }
   }
