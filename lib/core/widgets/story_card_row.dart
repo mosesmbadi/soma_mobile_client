@@ -1,5 +1,7 @@
+// File: story_card_row.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:soma/core/utils/quill_utils.dart';
 
 class StoryCardRow extends StatelessWidget {
   final Map<String, dynamic> story;
@@ -16,7 +18,7 @@ class StoryCardRow extends StatelessWidget {
     final String title = story['title'] ?? 'No Title';
     final String authorName = story['author']?['name'] ?? 'Unknown Author';
     final String thumbnailUrl = story['thumbnailUrl'] ?? '';
-    final String contentSnippet = story['content']?.split('\n').first ?? 'No Content';
+    final String contentSnippet = QuillUtils.extractPlainText(story['content'] ?? '[]', maxLength: 150);
 
     final int reads = story['reads'] ?? 0;
     final int commentsCount = (story['comments'] as List?)?.length ?? 0;
@@ -38,65 +40,38 @@ class StoryCardRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title
                     Text(
                       title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    // Subtitle or content snippet
                     Text(
                       contentSnippet,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
-                    // Refactored Row for all metadata
                     Row(
                       children: [
-                        // Author
-                        const CircleAvatar(
-                          radius: 10,
-                          child: Icon(Icons.person, size: 12),
-                        ),
+                        const CircleAvatar(radius: 10, child: Icon(Icons.person, size: 12)),
                         const SizedBox(width: 4),
-                        Text(
-                          authorName,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        Text(authorName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
                         const SizedBox(width: 8),
-                        
-                        // Date
                         Icon(Icons.access_time, size: 12, color: Colors.grey),
                         const SizedBox(width: 4),
                         Text(formattedDate, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                         const SizedBox(width: 8),
-
-                        // Views/Reads
                         Icon(Icons.visibility, size: 12, color: Colors.grey),
                         const SizedBox(width: 4),
                         Text('$reads', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                         const SizedBox(width: 8),
-
-                        // Comments
                         Icon(Icons.comment, size: 12, color: Colors.grey),
                         const SizedBox(width: 4),
                         Text('$commentsCount', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                         const SizedBox(width: 8),
-
-                        // Votes/Rates
                         Icon(Icons.star, size: 12, color: Colors.amber),
                         const SizedBox(width: 4),
                         Text('$rating', style: const TextStyle(fontSize: 12, color: Colors.grey)),
@@ -106,7 +81,6 @@ class StoryCardRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              // Thumbnail image on right
               ClipRRect(
                 borderRadius: BorderRadius.circular(6.0),
                 child: thumbnailUrl.isNotEmpty
