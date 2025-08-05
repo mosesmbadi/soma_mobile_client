@@ -1,26 +1,31 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soma/core/services/image_upload_service.dart';
+import '../../../core/config/environment.dart';
 
-import '../../../core/config/environment.dart'; // Corrected import path
-
-const String apiUrl = '${Environment.backendUrl}/api/stories'; // Moved to top-level
+const String apiUrl = '${Environment.backendUrl}/api/stories';
 
 class AddStoryViewModel extends ChangeNotifier {
   final QuillController _controller = QuillController.basic();
   final TextEditingController _titleController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
+
   String _errorMessage = '';
   bool _isLoading = false;
 
+  // Getters
   QuillController get controller => _controller;
   TextEditingController get titleController => _titleController;
   String get errorMessage => _errorMessage;
   bool get isLoading => _isLoading;
+  FocusNode get focusNode => _focusNode;
+  ScrollController get scrollController => _scrollController;
 
   AddStoryViewModel() {
     _loadSavedStory();
@@ -30,6 +35,8 @@ class AddStoryViewModel extends ChangeNotifier {
   void dispose() {
     _controller.dispose();
     _titleController.dispose();
+    _focusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -43,7 +50,6 @@ class AddStoryViewModel extends ChangeNotifier {
       try {
         _controller.document = Document.fromJson(jsonDecode(savedContent));
       } catch (e) {
-        
         _controller.document = Document();
       }
     }
@@ -99,7 +105,7 @@ class AddStoryViewModel extends ChangeNotifier {
       return;
     }
 
-    // Extract image URLs from Quill content
+    // Extract image URLs
     final List<String> bodyImageUrls = [];
     String? thumbnailUrl;
 
@@ -108,9 +114,7 @@ class AddStoryViewModel extends ChangeNotifier {
       if (op['insert'] is Map && op['insert'].containsKey('image')) {
         final imageUrl = op['insert']['image'];
         bodyImageUrls.add(imageUrl);
-        if (thumbnailUrl == null) {
-          thumbnailUrl = imageUrl; // Set the first image as thumbnail
-        }
+        thumbnailUrl ??= imageUrl; // First image as thumbnail
       }
     }
 
@@ -150,6 +154,7 @@ class AddStoryViewModel extends ChangeNotifier {
     }
   }
 
+  // Formatting Controls
   void toggleBold() {
     _controller.formatSelection(Attribute.bold);
   }
@@ -167,7 +172,6 @@ class AddStoryViewModel extends ChangeNotifier {
   }
 
   void toggleLink() {
-    // This is a simplified toggle. A real link button would open a dialog to get the URL.
     _controller.formatSelection(Attribute.link);
   }
 

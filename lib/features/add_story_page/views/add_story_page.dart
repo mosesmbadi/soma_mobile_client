@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:provider/provider.dart';
 import 'package:soma/features/add_story_page/viewmodels/add_story_viewmodel.dart';
 
@@ -35,12 +36,11 @@ class AddStoryPage extends StatelessWidget {
                               'Saving...',
                               style: TextStyle(
                                 fontSize: 18,
-                                color: Color.fromARGB(255, 48, 48, 48),
+                                color: const Color.fromARGB(255, 48, 48, 48),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(width: 16.0),
-                            // Removed Expanded here to make the button smaller
                             ElevatedButton(
                               onPressed: () => viewModel.publishStory(context),
                               style: ElevatedButton.styleFrom(
@@ -48,7 +48,7 @@ class AddStoryPage extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 10,
                                   horizontal: 10,
-                                ), // Reduced vertical padding
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10.0),
                                 ),
@@ -66,13 +66,13 @@ class AddStoryPage extends StatelessWidget {
                         ),
 
                         const SizedBox(height: 16.0),
+
                         // Story Title
                         TextField(
                           controller: viewModel.titleController,
                           decoration: InputDecoration(
                             labelText: 'Story Title',
                             hintText: 'Enter your story title',
-                            // filled: true,
                             fillColor: const Color.fromARGB(255, 255, 255, 255),
                           ),
                           style: const TextStyle(
@@ -81,8 +81,9 @@ class AddStoryPage extends StatelessWidget {
                           ),
                         ),
 
-                        // container for text manipulations
                         const SizedBox(height: 16.0),
+
+                        // Text manipulation toolbar
                         Container(
                           decoration: BoxDecoration(
                             color: const Color.fromARGB(255, 255, 255, 255),
@@ -145,8 +146,9 @@ class AddStoryPage extends StatelessWidget {
                           ),
                         ),
 
-                        // story content
                         const SizedBox(height: 16.0),
+
+                        // Story Content Editor
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,31 +156,36 @@ class AddStoryPage extends StatelessWidget {
                               Expanded(
                                 child: Container(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: QuillEditor.basic(
-                                    configurations: QuillEditorConfigurations(
-                                      controller: viewModel.controller,
-                                      readOnly: false,
+                                  child: QuillEditor(
+                                    controller: viewModel.controller,
+                                    focusNode: viewModel.focusNode,
+                                    scrollController:
+                                        viewModel.scrollController,
+                                    config: QuillEditorConfig(
                                       placeholder: 'Story Content',
+                                      embedBuilders: FlutterQuillEmbeds.editorBuilders(),
                                     ),
                                   ),
                                 ),
                               ),
+
+                              const SizedBox(height: 16.0),
+
+                              if (viewModel.errorMessage.isNotEmpty)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.only(bottom: 16.0),
+                                  child: Text(
+                                    viewModel.errorMessage,
+                                    style: const TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 14.0,
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         ),
-
-                        const SizedBox(height: 16.0),
-                        if (viewModel.errorMessage.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16.0),
-                            child: Text(
-                              viewModel.errorMessage,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 14.0,
-                              ),
-                            ),
-                          ),
                       ],
                     ),
                   ),
