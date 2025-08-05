@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:provider/provider.dart';
-import 'package:soma/core/widgets/premium_content_card.dart';
+import 'package:soma/core/widgets/story_unlock_card.dart';
 import 'package:soma/features/story_detail_page/viewmodels/story_detail_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
