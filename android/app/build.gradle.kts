@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.soma.mobile_client"
+    namespace = "com.soma.mobile"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
@@ -19,7 +19,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.soma.mobile_client"
+        applicationId = "com.soma.mobile"
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

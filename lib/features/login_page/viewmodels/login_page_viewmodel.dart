@@ -13,7 +13,10 @@ class LoginPageViewModel extends ChangeNotifier {
   String _errorMessage = '';
   bool _isPasswordVisible = false;
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId:
+      '361257723283-ulp2fpqltipmk1om2g1jfjr7ujk678mf.apps.googleusercontent.com'
+  );
 
   TextEditingController get emailController => _emailController;
   TextEditingController get passwordController => _passwordController;

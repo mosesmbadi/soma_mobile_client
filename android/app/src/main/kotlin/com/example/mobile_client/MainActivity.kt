@@ -1,4 +1,4 @@
-package com.soma.mobile_client
+package com.soma.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 
