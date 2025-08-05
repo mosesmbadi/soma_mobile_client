@@ -14,6 +14,7 @@ class LoginPageViewModel extends ChangeNotifier {
   bool _isPasswordVisible = false;
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
+    // This should be the google's Client ID for Web application (not the one for android)
     serverClientId:
       '361257723283-ulp2fpqltipmk1om2g1jfjr7ujk678mf.apps.googleusercontent.com'
   );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:soma/features/profile_page/viewmodels/profile_page_viewmodel.dart';
+import 'package:soma/features/profile_page/views/profile_update_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -15,20 +16,22 @@ class ProfilePage extends StatelessWidget {
           const double profileImageRadius = 60;
 
           return Scaffold(
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              flexibleSpace: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xD1E4FFFF), Color(0xD1E4FFFF)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-              ),
-            ),
-            extendBodyBehindAppBar: true,
+            // appBar: AppBar(
+            //   backgroundColor: Colors.transparent,
+            //   elevation: 0,
+            
+            //   flexibleSpace: Container(
+            //     decoration: const BoxDecoration(
+            //       gradient: LinearGradient(
+            //         colors: [Color(0xD1E4FFFF), Color(0xD1E4FFFF)],
+            //         begin: Alignment.topLeft,
+            //         end: Alignment.bottomRight,
+            //       ),
+            //     ),
+            //   ),
+            // ),
+            // extendBodyBehindAppBar: true,
+
             body: viewModel.errorMessage.isNotEmpty
                 ? Center(
                     child: Text(
@@ -71,6 +74,19 @@ class ProfilePage extends StatelessWidget {
                                         ),
                                       ),
                                 ),
+                              ),
+                            ),
+                            // Gear Icon for Profile Update
+                            Positioned(
+                              top: 10,
+                              right: 10,
+                              child: IconButton(
+                                icon: const Icon(Icons.settings, color: Colors.white, size: 30),
+                                onPressed: () async {
+                                  await Navigator.pushNamed(context, '/profile_update');
+                                  // Refresh profile data after returning from update page
+                                  Provider.of<ProfilePageViewModel>(context, listen: false).fetchUserData();
+                                },
                               ),
                             ),
                             // Profile Picture (centered at bottom of background)

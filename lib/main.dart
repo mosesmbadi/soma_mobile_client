@@ -8,6 +8,7 @@ import 'package:soma/features/my_stories_page/views/my_stories_page.dart';
 import 'package:soma/features/add_story_page/views/add_story_page.dart';
 import 'package:soma/core/widgets/bottom_nav.dart';
 import 'package:soma/features/registration_page/views/registration_page.dart';
+import 'package:soma/features/profile_page/views/profile_update_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
         '/my_stories': (context) => const MyStoriesPage(),
         '/profile': (context) => const ProfilePage(),
         '/register': (context) => const RegistrationPage(),
+        '/profile_update': (context) => const ProfileUpdatePage(),
       },
     );
   }
