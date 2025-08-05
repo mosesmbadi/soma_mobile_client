@@ -39,4 +39,23 @@ class StoryRepository {
       throw Exception('An error occurred: $e');
     }
   }
+
+  Future<void> updateStoryReadCount(String storyId, String token) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$_storiesApiUrl/$storyId/read'),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update read count: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error updating read count: $e');
+    }
+  }
+
 }

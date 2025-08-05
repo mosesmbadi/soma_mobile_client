@@ -18,7 +18,7 @@ class StoryCardGrid extends StatelessWidget {
     final String thumbnailUrl = story['thumbnailUrl'] ?? '';
     final String contentSnippet = QuillUtils.extractPlainText(story['content'] ?? '[]', maxLength: 100);
 
-    final int reads = story['reads'] ?? 0;
+    final int reads = story['reads'] ?? story['readCount'] ?? story['views'] ?? 0;
     final double rating = (story['rating'] ?? 4.5).toDouble();
 
     return GestureDetector(

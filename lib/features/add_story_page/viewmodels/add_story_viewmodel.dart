@@ -19,6 +19,8 @@ class AddStoryViewModel extends ChangeNotifier {
   String _errorMessage = '';
   bool _isLoading = false;
 
+  String? _thumbnailUrl;
+
   // Getters
   QuillController get controller => _controller;
   TextEditingController get titleController => _titleController;
@@ -26,6 +28,7 @@ class AddStoryViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   FocusNode get focusNode => _focusNode;
   ScrollController get scrollController => _scrollController;
+  String? get thumbnailUrl => _thumbnailUrl;
 
   AddStoryViewModel() {
     _loadSavedStory();
@@ -105,18 +108,28 @@ class AddStoryViewModel extends ChangeNotifier {
       return;
     }
 
-    // Extract image URLs
-    final List<String> bodyImageUrls = [];
-    String? thumbnailUrl;
+    
+    
+    List<Map<String, dynamic>> docOperations = _controller.document.toDelta().toJson();
+    List<Map<String, dynamic>> modifiedDocOperations = [];
 
-    final docJson = _controller.document.toDelta().toJson();
-    for (var op in docJson) {
+    for (var op in docOperations) {
       if (op['insert'] is Map && op['insert'].containsKey('image')) {
         final imageUrl = op['insert']['image'];
-        bodyImageUrls.add(imageUrl);
-        thumbnailUrl ??= imageUrl; // First image as thumbnail
+
+        if (_thumbnailUrl == null) { // This is the first image found
+          _thumbnailUrl = imageUrl;
+          // Do NOT add this operation to modifiedDocOperations, effectively removing it from the content
+          continue; // Skip to the next operation
+        }
       }
+      modifiedDocOperations.add(op); // Add all other operations
     }
+
+    // If no image was found in the document, thumbnailUrl remains null.
+    // In this case, the content will be the original document content.
+    // If an image was found and removed, the content will be the modified document.
+    final String contentToSend = jsonEncode(modifiedDocOperations);
 
     try {
       final response = await http.post(
@@ -127,9 +140,8 @@ class AddStoryViewModel extends ChangeNotifier {
         },
         body: jsonEncode({
           'title': title,
-          'content': content,
+          'content': contentToSend,
           'thumbnailUrl': thumbnailUrl,
-          'bodyImageUrls': bodyImageUrls,
         }),
       );
 
