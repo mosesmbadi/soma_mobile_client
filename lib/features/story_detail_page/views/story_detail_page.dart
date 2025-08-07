@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:provider/provider.dart';
-import 'package:soma/core/widgets/story_unlock_card.dart';
+import 'package:soma/core/widgets/premium_content_card.dart';
 import 'package:soma/features/story_detail_page/viewmodels/story_detail_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:soma/data/story_repository.dart';
+import 'package:soma/data/user_repository.dart';
+import 'package:quill_delta/quill_delta.dart';
 
 class StoryDetailPage extends StatefulWidget {
   final Map<String, dynamic> story;
@@ -20,61 +21,149 @@ class StoryDetailPage extends StatefulWidget {
 
 class _StoryDetailPageState extends State<StoryDetailPage> {
   final StoryRepository _storyRepository = StoryRepository();
+  String? _currentUserId;
+  bool _isStoryUnlocked = false;
+  int _currentUserTokens = 0;
+  bool _isUnlocking = false;
+  bool _dataInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _initAndReadCount();
+    if (!_dataInitialized) {
+      _initializeData();
+      _dataInitialized = true;
+    }
   }
 
-  Future<void> _initAndReadCount() async {
+  Future<void> _initializeData() async {
     final prefs = await SharedPreferences.getInstance();
     final String? token = prefs.getString('jwt_token');
-
     if (token == null) {
       print('Error: No authentication token found.');
       return;
     }
-    _updateReadCount(token);
+    _fetchCurrentUserTokens();
+    _checkStoryUnlockStatus(token);
   }
 
-  Future<void> _updateReadCount(String token) async {
-    final String storyId = widget.story['_id'];
-
+  Future<void> _fetchCurrentUserTokens() async {
     try {
-      await _storyRepository.updateStoryReadCount(storyId, token);
-      // Optionally, update the local story object or UI if needed
+      final userDetails = await UserRepository().getCurrentUserDetails();
+      setState(() {
+        _currentUserId = userDetails['_id'];
+        _currentUserTokens = userDetails['tokens'] ?? 0;
+      });
     } catch (e) {
-      // Handle error, e.g., log it or show a toast
-      print('Error updating read count: $e');
+      print('Error fetching current user details: $e');
     }
+  }
+
+  Future<void> _checkStoryUnlockStatus(String token) async {
+    try {
+      final unlocked = await _storyRepository.isStoryUnlocked(widget.story['_id'], token);
+      setState(() {
+        _isStoryUnlocked = unlocked;
+      });
+    } catch (e) {
+      print('Error checking story unlock status: $e');
+    }
+  }
+
+  void _showSnackBar(String message, {Color? backgroundColor, Color? textColor}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: TextStyle(color: textColor ?? Colors.white)),
+        backgroundColor: backgroundColor ?? Colors.black,
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).size.height - 100,
+          right: 20,
+          left: 20,
+        ),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  Future<void> _handleUnlockStory() async {
+    setState(() {
+      _isUnlocking = true;
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('jwt_token');
+    if (token == null) {
+      _showSnackBar('Authentication token not found. Please log in.');
+      setState(() {
+        _isUnlocking = false;
+      });
+      return;
+    }
+
+    final String storyId = widget.story['_id'];
+    try {
+      await _storyRepository.unlockStory(storyId, token);
+      _showSnackBar('Story unlocked successfully!',
+          backgroundColor: Colors.green.shade200);
+      setState(() {
+        _isStoryUnlocked = true;
+      });
+      _fetchCurrentUserTokens();
+    } catch (e) {
+      _showSnackBar('Failed to unlock story: $e');
+    } finally {
+      setState(() {
+        _isUnlocking = false;
+      });
+    }
+  }
+
+  void _handleTopUp() {
+    _showSnackBar('Navigating to top-up options...');
+    print('Attempting to top up!');
+  }
+
+  Delta _ensureEndsWithNewline(Delta delta) {
+    if (delta.isEmpty || !(delta.last.data is String && delta.last.data.endsWith('\n'))) {
+      delta.insert('\n');
+    }
+    return delta;
   }
 
   @override
   Widget build(BuildContext context) {
     final String storySlug = widget.story['slug'] ?? '';
-    final int estimatedTime = widget.story['estimatedTime'] ?? 30; // Default 30 seconds
+    final int estimatedTime = widget.story['estimatedTime'] ?? 30;
+    final bool isPremium = widget.story['is_premium'] == true;
+    final bool isMyStory = _currentUserId != null && widget.story['author']?['_id'] == _currentUserId;
 
     return ChangeNotifierProvider(
-      create: (_) => StoryDetailViewModel(storySlug, widget.story['_id'], estimatedTime), 
+      create: (_) => StoryDetailViewModel(storySlug, widget.story['_id'], estimatedTime),
       child: Consumer<StoryDetailViewModel>(
         builder: (context, viewModel, child) {
-          final bool isPremium = widget.story['is_premium'] == true;
           final String title = widget.story['title'] ?? 'No Title';
           final String authorName = widget.story['author']?['name'] ?? 'Unknown Author';
           final String? thumbnailUrl = widget.story['thumbnailUrl'];
 
-          QuillController quillController;
-          try {
-            final contentJson = jsonDecode(widget.story['content'] ?? '[]');
-            final document = Document.fromJson(contentJson);
-            quillController = QuillController(
-              document: document,
-              selection: const TextSelection.collapsed(offset: 0),
-            );
-          } catch (_) {
-            quillController = QuillController.basic();
-          }
+          final contentJson = jsonDecode(widget.story['content'] ?? '[]');
+          final document = Document.fromJson(contentJson);
+          final fullDelta = document.toDelta();
+          final totalBlocks = document.length;
+          final premiumSplitIndex = (totalBlocks * 0.3).ceil();
+
+          // Prevent empty delta in part1/part2
+          final part1Delta = _ensureEndsWithNewline(fullDelta.slice(0, premiumSplitIndex));
+          final part2Delta = _ensureEndsWithNewline(fullDelta.slice(premiumSplitIndex));
+
+          final quillControllerPart1 = QuillController(
+            document: Document.fromDelta(part1Delta),
+            selection: const TextSelection.collapsed(offset: 0),
+          );
+
+          final quillControllerPart2 = QuillController(
+            document: Document.fromDelta(part2Delta),
+            selection: const TextSelection.collapsed(offset: 0),
+          );
 
           return Scaffold(
             appBar: AppBar(
@@ -107,8 +196,10 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                         ),
                       ),
                     ),
+
+                  // Part 1 of story
                   QuillEditor(
-                    controller: quillController,
+                    controller: quillControllerPart1,
                     focusNode: FocusNode(),
                     scrollController: ScrollController(),
                     config: QuillEditorConfig(
@@ -116,9 +207,32 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                       padding: const EdgeInsets.all(0),
                     ),
                   ),
-                  if (isPremium && !(widget.story['isUnlocked'] == true)) ...[
+
+                  // Premium gate OR rest of story
+                  if (isPremium && !_isStoryUnlocked && !isMyStory) ...[
                     const SizedBox(height: 24),
-                    const PremiumContentCard(),
+                    if (_currentUserTokens < 1)
+                      PremiumContentCard(
+                        cardType: PremiumCardType.topUp,
+                        onButtonPressed: _handleTopUp,
+                        isLoading: _isUnlocking,
+                      )
+                    else
+                      PremiumContentCard(
+                        cardType: PremiumCardType.unlock,
+                        onButtonPressed: _handleUnlockStory,
+                        isLoading: _isUnlocking,
+                      ),
+                  ] else ...[
+                    QuillEditor(
+                      controller: quillControllerPart2,
+                      focusNode: FocusNode(),
+                      scrollController: ScrollController(),
+                      config: QuillEditorConfig(
+                        embedBuilders: FlutterQuillEmbeds.editorBuilders(),
+                        padding: const EdgeInsets.all(0),
+                      ),
+                    ),
                   ],
                 ],
               ),
