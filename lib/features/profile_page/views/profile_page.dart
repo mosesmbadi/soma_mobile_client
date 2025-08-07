@@ -3,14 +3,42 @@ import 'package:provider/provider.dart';
 import 'package:soma/features/profile_page/viewmodels/profile_page_viewmodel.dart';
 import 'package:soma/features/profile_page/views/profile_update_page.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late SharedPreferences _prefs;
+  late ProfilePageViewModel _viewModel;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    _prefs = await SharedPreferences.getInstance();
+    _viewModel = ProfilePageViewModel(prefs: _prefs);
+    setState(() {
+      _isInitialized = true;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ProfilePageViewModel(),
+    if (!_isInitialized) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return ChangeNotifierProvider<ProfilePageViewModel>.value(
+      value: _viewModel,
       child: Consumer<ProfilePageViewModel>(
         builder: (context, viewModel, child) {
           const double backgroundHeight = 250;
@@ -292,7 +320,7 @@ class ProfilePage extends StatelessWidget {
                                         date: story['createdAt'] != null
                                             ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
                                             : '',
-                                      )).toList(),
+                                      )).toList().cast<Widget>(),
                                 )
                               : (viewModel.trendingStories.isNotEmpty)
                                   ? Column(
@@ -302,7 +330,7 @@ class ProfilePage extends StatelessWidget {
                                             date: story['createdAt'] != null
                                                 ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
                                                 : '',
-                                          )).toList(),
+                                          )).toList().cast<Widget>(),
                                     )
                                   : const SizedBox.shrink()
                         else if (viewModel.userData!['role'] == 'writer')
@@ -314,7 +342,7 @@ class ProfilePage extends StatelessWidget {
                                         date: story['createdAt'] != null
                                             ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
                                             : '',
-                                      )).toList(),
+                                      )).toList().cast<Widget>(),
                                 )
                               : (viewModel.trendingStories.isNotEmpty)
                                   ? Column(
@@ -324,7 +352,7 @@ class ProfilePage extends StatelessWidget {
                                             date: story['createdAt'] != null
                                                 ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
                                                 : '',
-                                          )).toList(),
+                                          )).toList().cast<Widget>(),
                                     )
                                   : const SizedBox.shrink()
                         else
@@ -338,7 +366,6 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // Top up, wihthdarwal and others items
   Widget _buildCustomActionButton({
     required IconData icon,
     required String label,

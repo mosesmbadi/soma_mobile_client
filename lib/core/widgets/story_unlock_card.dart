@@ -1,26 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:soma/data/user_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 enum UnlockCardType { unlock, topUp }
 
-class StoryUnlockCard extends StatelessWidget {
+class StoryUnlockCard extends StatefulWidget {
   final int neededTokens;
   final UnlockCardType cardType;
   final VoidCallback onButtonPressed;
-  final bool isLoading; // New parameter
+  final bool isLoading;
 
   const StoryUnlockCard({
     super.key,
     this.neededTokens = 1,
     required this.cardType,
     required this.onButtonPressed,
-    this.isLoading = false, // Default to false
+    this.isLoading = false,
   });
+
+  @override
+  State<StoryUnlockCard> createState() => _StoryUnlockCardState();
+}
+
+class _StoryUnlockCardState extends State<StoryUnlockCard> {
+  late final UserRepository _userRepository;
+  late final SharedPreferences _prefs;
+  late final http.Client _httpClient;
+
+  @override
+  void initState() {
+    super.initState();
+    _httpClient = http.Client();
+    _initializeDependencies();
+  }
+
+  Future<void> _initializeDependencies() async {
+    _prefs = await SharedPreferences.getInstance();
+    _userRepository = UserRepository(prefs: _prefs, client: _httpClient);
+    setState(() {}); // Rebuild to use the initialized repository
+  }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>>(
-      future: UserRepository().getCurrentUserDetails(),
+      future: _userRepository.getCurrentUserDetails(),
       builder: (context, snapshot) {
         int currentBalance = 0;
         if (snapshot.connectionState == ConnectionState.done &&
@@ -35,7 +59,7 @@ class StoryUnlockCard extends StatelessWidget {
         String buttonText;
         IconData icon;
 
-        if (cardType == UnlockCardType.unlock) {
+        if (widget.cardType == UnlockCardType.unlock) {
           title = 'Unlock Story';
           description = "Unlock this premium story to continue reading.";
           buttonText = 'Unlock Now';
@@ -88,7 +112,7 @@ class StoryUnlockCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 // Balance info (only for unlock, or if we want to show current balance for top-up too)
-                if (cardType ==
+                if (widget.cardType ==
                     UnlockCardType.unlock) // Only show balance for unlock
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -108,7 +132,7 @@ class StoryUnlockCard extends StatelessWidget {
                         Expanded(
                           child: _buildTokenRow(
                             'Needed to Unlock',
-                            neededTokens,
+                            widget.neededTokens,
                           ),
                         ),
                       ],
@@ -116,7 +140,7 @@ class StoryUnlockCard extends StatelessWidget {
                   ),
                 const SizedBox(height: 20),
                 // Token packages (only for top-up)
-                if (cardType == UnlockCardType.topUp) ...[
+                if (widget.cardType == UnlockCardType.topUp) ...[
                   _buildTokenOption('100 Tokens', 'Ksh120.99', highlight: true),
                   const SizedBox(height: 12),
                   _buildTokenOption('50 Tokens', 'Ksh10.99'),
@@ -126,9 +150,9 @@ class StoryUnlockCard extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: isLoading
+                    onPressed: widget.isLoading
                         ? null
-                        : onButtonPressed, // Disable when loading
+                        : widget.onButtonPressed, // Disable when loading
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       backgroundColor: const Color(0xFF333333),
@@ -137,7 +161,7 @@ class StoryUnlockCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: isLoading
+                    child: widget.isLoading
                         ? const CircularProgressIndicator(
                             color: Colors.white,
                           ) // Show loading indicator
@@ -152,8 +176,8 @@ class StoryUnlockCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 // Maybe Later button (only for unlock)
-                if (cardType == UnlockCardType.unlock &&
-                    !isLoading) // Hide when loading
+                if (widget.cardType == UnlockCardType.unlock &&
+                    !widget.isLoading) // Hide when loading
                   Text('Maybe Later', style: TextStyle(fontSize: 16)),
               ],
             ),

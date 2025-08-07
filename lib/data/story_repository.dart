@@ -2,8 +2,15 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../core/config/environment.dart';
 
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../core/config/environment.dart';
+
 class StoryRepository {
+  final http.Client _client;
   final String _storiesApiUrl = '${Environment.backendUrl}/api/stories';
+
+  StoryRepository({http.Client? client}) : _client = client ?? http.Client();
   // fetch list of stories for the loggedin user
   final String _myStoriesApiUrl = '${Environment.backendUrl}/api/stories/me';
   // fetch list of unlocked stories for the loggedin user
@@ -11,7 +18,7 @@ class StoryRepository {
 
   Future<List<dynamic>> fetchStories() async {
     try {
-      final response = await http.get(Uri.parse(_storiesApiUrl));
+      final response = await _client.get(Uri.parse(_storiesApiUrl));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -25,7 +32,7 @@ class StoryRepository {
 
   Future<List<dynamic>> fetchMyStories(String token) async {
     try {
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse(_myStoriesApiUrl),
         headers: <String, String>{
           'Authorization': 'Bearer $token',
@@ -45,7 +52,7 @@ class StoryRepository {
 
   Future<void> updateStoryReadCount(String storyId, String token) async {
     try {
-      final response = await http.patch(
+      final response = await _client.patch(
         Uri.parse('$_storiesApiUrl/$storyId/read'),
         headers: <String, String>{
           'Authorization': 'Bearer $token',
@@ -63,7 +70,7 @@ class StoryRepository {
 
   Future<List<String>> fetchUnlockedStoryIds(String token) async {
     try {
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse(_unlockedStoriesApiUrl),
         headers: <String, String>{
           'Authorization': 'Bearer $token',
@@ -94,7 +101,7 @@ class StoryRepository {
 
   Future<void> unlockStory(String storyId, String token) async {
     try {
-      final response = await http.post(
+      final response = await _client.post(
         Uri.parse('$_storiesApiUrl/$storyId/unlock'),
         headers: <String, String>{
           'Authorization': 'Bearer $token',

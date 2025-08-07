@@ -1,15 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:soma/data/user_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
-class StoryUnlockCard extends StatelessWidget {
+class StoryUnlockCard extends StatefulWidget {
   final int neededTokens;
 
   const StoryUnlockCard({super.key, this.neededTokens = 1});
 
   @override
+  State<StoryUnlockCard> createState() => _StoryUnlockCardState();
+}
+
+class _StoryUnlockCardState extends State<StoryUnlockCard> {
+  late final UserRepository _userRepository;
+  late final SharedPreferences _prefs;
+  late final http.Client _httpClient;
+
+  @override
+  void initState() {
+    super.initState();
+    _httpClient = http.Client();
+    _initializeDependencies();
+  }
+
+  Future<void> _initializeDependencies() async {
+    _prefs = await SharedPreferences.getInstance();
+    _userRepository = UserRepository(prefs: _prefs, client: _httpClient);
+    setState(() {}); // Rebuild to use the initialized repository
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>>(
-      future: UserRepository().getCurrentUserDetails(),
+      future: _userRepository.getCurrentUserDetails(),
       builder: (context, snapshot) {
         int currentBalance = 0;
         if (snapshot.connectionState == ConnectionState.done &&
@@ -72,7 +96,7 @@ class StoryUnlockCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildTokenRow('Current Balance', currentBalance),
-                      _buildTokenRow('Needed to Continue', neededTokens),
+                      _buildTokenRow('Needed to Continue', widget.neededTokens),
                     ],
                   ),
                 ),

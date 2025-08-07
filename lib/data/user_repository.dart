@@ -4,18 +4,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/config/environment.dart';
 
 class UserRepository {
+  final http.Client _client;
+  final SharedPreferences _prefs;
   final String _meApiUrl = '${Environment.backendUrl}/api/auth/me';
 
+  UserRepository({http.Client? client, required SharedPreferences prefs})
+      : _client = client ?? http.Client(),
+        _prefs = prefs;
+
   Future<Map<String, dynamic>> getCurrentUserDetails() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? token = prefs.getString('jwt_token');
+    final String? token = _prefs.getString('jwt_token');
 
     if (token == null) {
       throw Exception('No authentication token found.');
     }
 
     try {
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse(_meApiUrl),
         headers: <String, String>{
           'Authorization': 'Bearer $token',
@@ -36,7 +41,7 @@ class UserRepository {
   Future<List<dynamic>> fetchRecentReads(String token) async {
     final String _unlockedStoriesApiUrl = '${Environment.backendUrl}/api/stories/user/unlocked';
     try {
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse(_unlockedStoriesApiUrl),
         headers: <String, String>{
           'Authorization': 'Bearer $token',

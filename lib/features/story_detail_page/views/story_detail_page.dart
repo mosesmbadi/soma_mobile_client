@@ -8,6 +8,7 @@ import 'package:soma/features/story_detail_page/viewmodels/story_detail_viewmode
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soma/data/story_repository.dart';
 import 'package:soma/data/user_repository.dart';
+import 'package:http/http.dart' as http;
 
 class StoryDetailPage extends StatefulWidget {
   final Map<String, dynamic> story;
@@ -19,25 +20,32 @@ class StoryDetailPage extends StatefulWidget {
 }
 
 class _StoryDetailPageState extends State<StoryDetailPage> {
-  final StoryRepository _storyRepository = StoryRepository();
+  late final StoryRepository _storyRepository;
+  late final UserRepository _userRepository;
+  late final SharedPreferences _prefs;
+  late final http.Client _httpClient;
+
   String? _currentUserId;
   bool _isStoryUnlocked = false;
   int _currentUserTokens = 0;
   bool _isUnlocking = false;
-  bool _dataInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    if (!_dataInitialized) {
-      _initializeData();
-      _dataInitialized = true;
-    }
+    _httpClient = http.Client(); // Initialize http client
+    _initializeDependencies();
+  }
+
+  Future<void> _initializeDependencies() async {
+    _prefs = await SharedPreferences.getInstance();
+    _userRepository = UserRepository(prefs: _prefs, client: _httpClient);
+    _storyRepository = StoryRepository(client: _httpClient);
+    _initializeData();
   }
 
   Future<void> _initializeData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? token = prefs.getString('jwt_token');
+    final String? token = _prefs.getString('jwt_token');
     if (token == null) {
       print('Error: No authentication token found.');
       return;
@@ -48,7 +56,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
 
   Future<void> _fetchCurrentUserTokens() async {
     try {
-      final userDetails = await UserRepository().getCurrentUserDetails();
+      final userDetails = await _userRepository.getCurrentUserDetails();
       setState(() {
         _currentUserId = userDetails['_id'];
         _currentUserTokens = userDetails['tokens'] ?? 0;
@@ -99,8 +107,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     setState(() {
       _isUnlocking = true;
     });
-    final prefs = await SharedPreferences.getInstance();
-    final String? token = prefs.getString('jwt_token');
+    final String? token = _prefs.getString('jwt_token');
     if (token == null) {
       _showSnackBar('Authentication token not found. Please log in.');
       setState(() {

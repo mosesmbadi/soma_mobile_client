@@ -23,11 +23,16 @@ class ProfilePageViewModel extends ChangeNotifier {
   List<dynamic> get trendingStories => _trendingStories;
   String get errorMessage => _errorMessage;
 
-  final UserRepository _userRepository = UserRepository();
-  final StoryRepository _storyRepository = StoryRepository();
-  final TrendingStoryRepository _trendingStoryRepository = TrendingStoryRepository();
+  final UserRepository _userRepository;
+  final StoryRepository _storyRepository;
+  final TrendingStoryRepository _trendingStoryRepository;
+  final SharedPreferences _prefs;
 
-  ProfilePageViewModel() {
+  ProfilePageViewModel({required SharedPreferences prefs, http.Client? client})
+      : _prefs = prefs,
+        _userRepository = UserRepository(prefs: prefs, client: client),
+        _storyRepository = StoryRepository(client: client),
+        _trendingStoryRepository = TrendingStoryRepository(client: client) {
     fetchUserData();
   }
 
@@ -35,8 +40,7 @@ class ProfilePageViewModel extends ChangeNotifier {
     _errorMessage = '';
     notifyListeners();
 
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? token = prefs.getString('jwt_token');
+    final String? token = _prefs.getString('jwt_token');
 
     if (token == null) {
       _errorMessage = 'No authentication token found. Please log in.';
@@ -104,8 +108,7 @@ class ProfilePageViewModel extends ChangeNotifier {
   }
 
   Future<void> logout(BuildContext context) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('jwt_token');
+    await _prefs.remove('jwt_token');
 
     if (context.mounted) {
       Navigator.pushAndRemoveUntil(
