@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart' show Delta, Document, QuillController, QuillEditor, QuillEditorConfig;
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:provider/provider.dart';
 import 'package:soma/core/widgets/premium_content_card.dart';
@@ -140,21 +140,16 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
 
           final contentJson = jsonDecode(widget.story['content'] ?? '[]');
           final document = Document.fromJson(contentJson);
+
+          // Ensure the document ends with a newline, as required by flutter_quill
+          if (!document.toPlainText().endsWith('\n')) {
+            document.insert(document.length, '\n');
+          }
+
           final fullDelta = document.toDelta();
-          final totalBlocks = document.length;
-          final premiumSplitIndex = (totalBlocks * 0.3).ceil();
 
-          // Prevent empty delta in part1/part2
-          final part1Delta = fullDelta.slice(0, premiumSplitIndex);
-          final part2Delta = fullDelta.slice(premiumSplitIndex);
-
-          final quillControllerPart1 = QuillController(
-            document: Document.fromDelta(part1Delta),
-            selection: const TextSelection.collapsed(offset: 0),
-          );
-
-          final quillControllerPart2 = QuillController(
-            document: Document.fromDelta(part2Delta),
+          final quillController = QuillController(
+            document: Document.fromDelta(fullDelta),
             selection: const TextSelection.collapsed(offset: 0),
           );
 
@@ -190,9 +185,9 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                       ),
                     ),
 
-                  // Part 1 of story
+                  // Display full story content
                   QuillEditor(
-                    controller: quillControllerPart1,
+                    controller: quillController,
                     focusNode: FocusNode(),
                     scrollController: ScrollController(),
                     config: QuillEditorConfig(
@@ -200,10 +195,10 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                       padding: const EdgeInsets.all(0),
                     ),
                   ),
+                  const SizedBox(height: 24), // Add some space before the premium card
 
-                  // Premium gate OR rest of story
+                  // Premium gate at the end of the story
                   if (isPremium && !_isStoryUnlocked && !isMyStory) ...[
-                    const SizedBox(height: 24),
                     if (_currentUserTokens < 1)
                       PremiumContentCard(
                         cardType: PremiumCardType.topUp,
@@ -216,16 +211,6 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                         onButtonPressed: _handleUnlockStory,
                         isLoading: _isUnlocking,
                       ),
-                  ] else ...[
-                    QuillEditor(
-                      controller: quillControllerPart2,
-                      focusNode: FocusNode(),
-                      scrollController: ScrollController(),
-                      config: QuillEditorConfig(
-                        embedBuilders: FlutterQuillEmbeds.editorBuilders(),
-                        padding: const EdgeInsets.all(0),
-                      ),
-                    ),
                   ],
                 ],
               ),

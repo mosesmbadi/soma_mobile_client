@@ -99,8 +99,8 @@ class PremiumContentCard extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildTokenRow('Current Balance', currentBalance),
-                        _buildTokenRow('Needed to Unlock', neededTokens),
+                        Expanded(child: _buildTokenRow('Current Balance', currentBalance)),
+                        Expanded(child: _buildTokenRow('Needed to Unlock', neededTokens)),
                       ],
                     ),
                   ),
