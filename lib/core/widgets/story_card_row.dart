@@ -55,25 +55,51 @@ class StoryCardRow extends StatelessWidget {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const CircleAvatar(radius: 10, child: Icon(Icons.person, size: 12)),
-                        const SizedBox(width: 4),
-                        Text(authorName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                        const SizedBox(width: 8),
-                        Icon(Icons.access_time, size: 12, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Text(formattedDate, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                        const SizedBox(width: 8),
-                        Icon(Icons.visibility, size: 12, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Text('$reads', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                        const SizedBox(width: 8),
-                        Icon(Icons.comment, size: 12, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Text('$commentsCount', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                        const SizedBox(width: 8),
-                        Icon(Icons.star, size: 12, color: Colors.amber),
-                        const SizedBox(width: 4),
-                        Text('$rating', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              const CircleAvatar(radius: 10, child: Icon(Icons.person, size: 12)),
+                              const SizedBox(width: 4),
+                              Expanded(child: Text(authorName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Icon(Icons.access_time, size: 12, color: Colors.grey),
+                              const SizedBox(width: 4),
+                              Expanded(child: Text(formattedDate, style: const TextStyle(fontSize: 12, color: Colors.grey), overflow: TextOverflow.ellipsis)),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Icon(Icons.visibility, size: 12, color: Colors.grey),
+                              const SizedBox(width: 4),
+                              Expanded(child: Text('$reads', style: const TextStyle(fontSize: 12, color: Colors.grey), overflow: TextOverflow.ellipsis)),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Icon(Icons.comment, size: 12, color: Colors.grey),
+                              const SizedBox(width: 4),
+                              Expanded(child: Text('$commentsCount', style: const TextStyle(fontSize: 12, color: Colors.grey), overflow: TextOverflow.ellipsis)),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Icon(Icons.star, size: 12, color: Colors.amber),
+                              const SizedBox(width: 4),
+                              Expanded(child: Text('$rating', style: const TextStyle(fontSize: 12, color: Colors.grey), overflow: TextOverflow.ellipsis)),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ],
