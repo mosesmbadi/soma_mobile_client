@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:soma/features/profile_page/viewmodels/profile_page_viewmodel.dart';
 import 'package:soma/features/profile_page/views/profile_update_page.dart';
+import 'package:intl/intl.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -213,22 +214,37 @@ class ProfilePage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        // Recent Reads Section
+                        // Recent Reads / My Stories / Trending Stories Section
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Recent Reads',
-                                style: TextStyle(
+                              Text(
+                                viewModel.userData!['role'] == 'reader'
+                                    ? (viewModel.recentReads.isNotEmpty ? 'Recent Reads' : 'Trending Stories')
+                                    : (viewModel.myStories.isNotEmpty ? 'My Stories' : 'Trending Stories'),
+                                style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               TextButton(
                                 onPressed: () {
-                                  // Handle view all recent reads
+                                  // Handle view all based on what's displayed
+                                  if (viewModel.userData!['role'] == 'reader') {
+                                    if (viewModel.recentReads.isNotEmpty) {
+                                      // Navigate to Recent Reads page
+                                    } else {
+                                      // Navigate to Trending Stories page
+                                    }
+                                  } else {
+                                    if (viewModel.myStories.isNotEmpty) {
+                                      // Navigate to My Stories page
+                                    } else {
+                                      // Navigate to Trending Stories page
+                                    }
+                                  }
                                 },
                                 child: const Text(
                                   'View All',
@@ -242,21 +258,52 @@ class ProfilePage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        _buildRecentReadItem(
-                          title: 'The Cowherd of the Savannah',
-                          author: 'George Mukabi',
-                          date: 'Jan 3, 2022',
-                        ),
-                        _buildRecentReadItem(
-                          title: 'The Cowherd of the Savannah',
-                          author: 'George Mukabi',
-                          date: 'Jan 3, 2022',
-                        ),
-                        _buildRecentReadItem(
-                          title: 'The Cowherd of the Savannah',
-                          author: 'George Mukabi',
-                          date: 'Jan 3, 2022',
-                        ),
+                        if (viewModel.userData!['role'] == 'reader')
+                          (viewModel.recentReads.isNotEmpty)
+                              ? Column(
+                                  children: viewModel.recentReads.map((story) => _buildRecentReadItem(
+                                        title: story['title'] ?? 'No Title',
+                                        author: story['author']?['name'] ?? 'Unknown Author',
+                                        date: story['createdAt'] != null
+                                            ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
+                                            : '',
+                                      )).toList(),
+                                )
+                              : (viewModel.trendingStories.isNotEmpty)
+                                  ? Column(
+                                      children: viewModel.trendingStories.map((story) => _buildRecentReadItem(
+                                            title: story['title'] ?? 'No Title',
+                                            author: story['author']?['name'] ?? 'Unknown Author',
+                                            date: story['createdAt'] != null
+                                                ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
+                                                : '',
+                                          )).toList(),
+                                    )
+                                  : const SizedBox.shrink()
+                        else if (viewModel.userData!['role'] == 'writer')
+                          (viewModel.myStories.isNotEmpty)
+                              ? Column(
+                                  children: viewModel.myStories.map((story) => _buildRecentReadItem(
+                                        title: story['title'] ?? 'No Title',
+                                        author: story['author']?['name'] ?? 'Unknown Author',
+                                        date: story['createdAt'] != null
+                                            ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
+                                            : '',
+                                      )).toList(),
+                                )
+                              : (viewModel.trendingStories.isNotEmpty)
+                                  ? Column(
+                                      children: viewModel.trendingStories.map((story) => _buildRecentReadItem(
+                                            title: story['title'] ?? 'No Title',
+                                            author: story['author']?['name'] ?? 'Unknown Author',
+                                            date: story['createdAt'] != null
+                                                ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
+                                                : '',
+                                          )).toList(),
+                                    )
+                                  : const SizedBox.shrink()
+                        else
+                          const SizedBox.shrink(), // Handle other roles or no stories
                       ],
                     ),
                   ),
@@ -348,19 +395,6 @@ class ProfilePage extends StatelessWidget {
               Text(
                 date,
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              Row(
-                children: const [
-                  Icon(Icons.arrow_upward, size: 12, color: Colors.green),
-                  Text('1K', style: TextStyle(fontSize: 12)),
-                  SizedBox(width: 8),
-                  Icon(
-                    Icons.remove_red_eye_outlined,
-                    size: 12,
-                    color: Colors.grey,
-                  ),
-                  Text('2K', style: TextStyle(fontSize: 12)),
-                ],
               ),
             ],
           ),

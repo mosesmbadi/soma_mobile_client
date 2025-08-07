@@ -32,4 +32,25 @@ class UserRepository {
       throw Exception('An error occurred while fetching user details: $e');
     }
   }
+
+  Future<List<dynamic>> fetchRecentReads(String token) async {
+    final String _unlockedStoriesApiUrl = '${Environment.backendUrl}/api/stories/user/unlocked';
+    try {
+      final response = await http.get(
+        Uri.parse(_unlockedStoriesApiUrl),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load recent reads: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('An error occurred while fetching recent reads: $e');
+    }
+  }
 }
