@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:provider/provider.dart';
-import 'package:soma/core/widgets/premium_content_card.dart';
+import 'package:soma/core/widgets/story_unlock_card.dart';
 import 'package:soma/features/story_detail_page/viewmodels/story_detail_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soma/data/story_repository.dart';
 import 'package:soma/data/user_repository.dart';
-
 
 class StoryDetailPage extends StatefulWidget {
   final Map<String, dynamic> story;
@@ -61,7 +60,10 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
 
   Future<void> _checkStoryUnlockStatus(String token) async {
     try {
-      final unlocked = await _storyRepository.isStoryUnlocked(widget.story['_id'], token);
+      final unlocked = await _storyRepository.isStoryUnlocked(
+        widget.story['_id'],
+        token,
+      );
       setState(() {
         _isStoryUnlocked = unlocked;
       });
@@ -70,10 +72,17 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     }
   }
 
-  void _showSnackBar(String message, {Color? backgroundColor, Color? textColor}) {
+  void _showSnackBar(
+    String message, {
+    Color? backgroundColor,
+    Color? textColor,
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: TextStyle(color: textColor ?? Colors.white)),
+        content: Text(
+          message,
+          style: TextStyle(color: textColor ?? Colors.white),
+        ),
         backgroundColor: backgroundColor ?? Colors.black,
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.only(
@@ -103,8 +112,10 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     final String storyId = widget.story['_id'];
     try {
       await _storyRepository.unlockStory(storyId, token);
-      _showSnackBar('Story unlocked successfully!',
-          backgroundColor: Colors.green.shade200);
+      _showSnackBar(
+        'Story unlocked successfully!',
+        backgroundColor: Colors.green.shade200,
+      );
       setState(() {
         _isStoryUnlocked = true;
       });
@@ -128,14 +139,18 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     final String storySlug = widget.story['slug'] ?? '';
     final int estimatedTime = widget.story['estimatedTime'] ?? 30;
     final bool isPremium = widget.story['is_premium'] == true;
-    final bool isMyStory = _currentUserId != null && widget.story['author']?['_id'] == _currentUserId;
+    final bool isMyStory =
+        _currentUserId != null &&
+        widget.story['author']?['_id'] == _currentUserId;
 
     return ChangeNotifierProvider(
-      create: (_) => StoryDetailViewModel(storySlug, widget.story['_id'], estimatedTime),
+      create: (_) =>
+          StoryDetailViewModel(storySlug, widget.story['_id'], estimatedTime),
       child: Consumer<StoryDetailViewModel>(
         builder: (context, viewModel, child) {
           final String title = widget.story['title'] ?? 'No Title';
-          final String authorName = widget.story['author']?['name'] ?? 'Unknown Author';
+          final String authorName =
+              widget.story['author']?['name'] ?? 'Unknown Author';
           final String? thumbnailUrl = widget.story['thumbnailUrl'];
 
           final contentJson = jsonDecode(widget.story['content'] ?? '[]');
@@ -163,9 +178,18 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Text('By $authorName', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  Text(
+                    'By $authorName',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
                   const SizedBox(height: 16),
                   if (thumbnailUrl != null && thumbnailUrl.isNotEmpty)
                     Padding(
@@ -176,11 +200,12 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                           thumbnailUrl,
                           width: double.infinity,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            height: 200,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.broken_image, size: 50),
-                          ),
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                height: 200,
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.broken_image, size: 50),
+                              ),
                         ),
                       ),
                     ),
@@ -195,19 +220,20 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                       padding: const EdgeInsets.all(0),
                     ),
                   ),
-                  const SizedBox(height: 24), // Add some space before the premium card
-
+                  const SizedBox(
+                    height: 24,
+                  ), // Add some space before the premium card
                   // Premium gate at the end of the story
                   if (isPremium && !_isStoryUnlocked && !isMyStory) ...[
                     if (_currentUserTokens < 1)
-                      PremiumContentCard(
-                        cardType: PremiumCardType.topUp,
+                      StoryUnlockCard(
+                        cardType: UnlockCardType.topUp,
                         onButtonPressed: _handleTopUp,
                         isLoading: _isUnlocking,
                       )
                     else
-                      PremiumContentCard(
-                        cardType: PremiumCardType.unlock,
+                      StoryUnlockCard(
+                        cardType: UnlockCardType.unlock,
                         onButtonPressed: _handleUnlockStory,
                         isLoading: _isUnlocking,
                       ),

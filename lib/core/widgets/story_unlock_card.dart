@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:soma/data/user_repository.dart';
 
-enum PremiumCardType {
-  unlock,
-  topUp,
-}
+enum UnlockCardType { unlock, topUp }
 
-class PremiumContentCard extends StatelessWidget {
+class StoryUnlockCard extends StatelessWidget {
   final int neededTokens;
-  final PremiumCardType cardType;
+  final UnlockCardType cardType;
   final VoidCallback onButtonPressed;
   final bool isLoading; // New parameter
 
-  const PremiumContentCard({
+  const StoryUnlockCard({
     super.key,
     this.neededTokens = 1,
     required this.cardType,
@@ -26,7 +23,8 @@ class PremiumContentCard extends StatelessWidget {
       future: UserRepository().getCurrentUserDetails(),
       builder: (context, snapshot) {
         int currentBalance = 0;
-        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
           currentBalance = snapshot.data?['tokens'] ?? 0;
         } else if (snapshot.hasError) {
           // Handle error, maybe log it or show a default value
@@ -37,15 +35,16 @@ class PremiumContentCard extends StatelessWidget {
         String buttonText;
         IconData icon;
 
-        if (cardType == PremiumCardType.unlock) {
+        if (cardType == UnlockCardType.unlock) {
           title = 'Unlock Story';
           description = "Unlock this premium story to continue reading.";
           buttonText = 'Unlock Now';
           icon = Icons.lock_open;
         } else {
-          // PremiumCardType.topUp
+          // UnlockCardType.topUp
           title = 'Top Up Account';
-          description = "You've reached your free reading limit. Top up your account to continue enjoying this amazing story.";
+          description =
+              "You've reached your free reading limit. Top up your account to continue enjoying this amazing story.";
           buttonText = 'Top Up Now';
           icon = Icons.account_balance_wallet;
         }
@@ -89,7 +88,8 @@ class PremiumContentCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 // Balance info (only for unlock, or if we want to show current balance for top-up too)
-                if (cardType == PremiumCardType.unlock) // Only show balance for unlock
+                if (cardType ==
+                    UnlockCardType.unlock) // Only show balance for unlock
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -99,14 +99,24 @@ class PremiumContentCard extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(child: _buildTokenRow('Current Balance', currentBalance)),
-                        Expanded(child: _buildTokenRow('Needed to Unlock', neededTokens)),
+                        Expanded(
+                          child: _buildTokenRow(
+                            'Current Balance',
+                            currentBalance,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildTokenRow(
+                            'Needed to Unlock',
+                            neededTokens,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 const SizedBox(height: 20),
                 // Token packages (only for top-up)
-                if (cardType == PremiumCardType.topUp) ...[
+                if (cardType == UnlockCardType.topUp) ...[
                   _buildTokenOption('100 Tokens', 'Ksh120.99', highlight: true),
                   const SizedBox(height: 12),
                   _buildTokenOption('50 Tokens', 'Ksh10.99'),
@@ -116,7 +126,9 @@ class PremiumContentCard extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: isLoading ? null : onButtonPressed, // Disable when loading
+                    onPressed: isLoading
+                        ? null
+                        : onButtonPressed, // Disable when loading
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       backgroundColor: const Color(0xFF333333),
@@ -126,16 +138,22 @@ class PremiumContentCard extends StatelessWidget {
                       ),
                     ),
                     child: isLoading
-                        ? const CircularProgressIndicator(color: Colors.white) // Show loading indicator
+                        ? const CircularProgressIndicator(
+                            color: Colors.white,
+                          ) // Show loading indicator
                         : Text(
                             buttonText,
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 // Maybe Later button (only for unlock)
-                if (cardType == PremiumCardType.unlock && !isLoading) // Hide when loading
+                if (cardType == UnlockCardType.unlock &&
+                    !isLoading) // Hide when loading
                   Text('Maybe Later', style: TextStyle(fontSize: 16)),
               ],
             ),
@@ -155,15 +173,24 @@ class PremiumContentCard extends StatelessWidget {
           children: [
             const Icon(Icons.monetization_on, size: 16, color: Colors.amber),
             const SizedBox(width: 4),
-            Text('$value', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(
+              '$value',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildTokenOption(String title, String price, {bool highlight = false}) {
-    final Color borderColor = highlight ? const Color(0xFF9FE2BF) : Colors.grey.shade300;
+  Widget _buildTokenOption(
+    String title,
+    String price, {
+    bool highlight = false,
+  }) {
+    final Color borderColor = highlight
+        ? const Color(0xFF9FE2BF)
+        : Colors.grey.shade300;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -186,18 +213,31 @@ class PremiumContentCard extends StatelessWidget {
             children: [
               const Icon(Icons.monetization_on, color: Colors.amber),
               const SizedBox(width: 8),
-              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               if (highlight)
                 const Padding(
                   padding: EdgeInsets.only(left: 8),
                   child: Text(
                     'Best Value',
-                    style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
             ],
           ),
-          Text(price, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            price,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );

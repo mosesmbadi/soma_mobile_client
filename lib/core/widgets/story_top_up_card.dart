@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:soma/data/user_repository.dart';
 
-class PremiumContentCard extends StatelessWidget {
+class StoryUnlockCard extends StatelessWidget {
   final int neededTokens;
 
-  const PremiumContentCard({
-    super.key,
-    this.neededTokens = 1,
-  });
+  const StoryUnlockCard({super.key, this.neededTokens = 1});
 
   @override
   Widget build(BuildContext context) {
@@ -15,11 +12,11 @@ class PremiumContentCard extends StatelessWidget {
       future: UserRepository().getCurrentUserDetails(),
       builder: (context, snapshot) {
         int currentBalance = 0;
-        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
           currentBalance = snapshot.data?['tokens'] ?? 0;
         } else if (snapshot.hasError) {
           // Handle error, maybe log it or show a default value
-          
         }
 
         return ClipRRect(
@@ -46,7 +43,11 @@ class PremiumContentCard extends StatelessWidget {
                     color: Colors.purple.shade100,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.monetization_on, color: Colors.white, size: 30),
+                  child: const Icon(
+                    Icons.monetization_on,
+                    color: Colors.white,
+                    size: 30,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 const Text(
@@ -98,7 +99,10 @@ class PremiumContentCard extends StatelessWidget {
                     ),
                     child: const Text(
                       'Top Up Now',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
@@ -123,15 +127,24 @@ class PremiumContentCard extends StatelessWidget {
           children: [
             const Icon(Icons.monetization_on, size: 16, color: Colors.amber),
             const SizedBox(width: 4),
-            Text('$value', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(
+              '$value',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildTokenOption(String title, String price, {bool highlight = false}) {
-    final Color borderColor = highlight ? const Color(0xFF9FE2BF) : Colors.grey.shade300;
+  Widget _buildTokenOption(
+    String title,
+    String price, {
+    bool highlight = false,
+  }) {
+    final Color borderColor = highlight
+        ? const Color(0xFF9FE2BF)
+        : Colors.grey.shade300;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -154,18 +167,31 @@ class PremiumContentCard extends StatelessWidget {
             children: [
               const Icon(Icons.monetization_on, color: Colors.amber),
               const SizedBox(width: 8),
-              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               if (highlight)
                 const Padding(
                   padding: EdgeInsets.only(left: 8),
                   child: Text(
                     'Best Value',
-                    style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
             ],
           ),
-          Text(price, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            price,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );
