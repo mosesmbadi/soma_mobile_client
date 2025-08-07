@@ -67,10 +67,35 @@ class ProfilePage extends StatelessWidget {
                               right: 10,
                               child: IconButton(
                                 icon: const Icon(Icons.settings, color: Colors.white, size: 30),
-                                onPressed: () async {
-                                  await Navigator.pushNamed(context, '/profile_update');
-                                  // Refresh profile data after returning from update page
-                                  Provider.of<ProfilePageViewModel>(context, listen: false).fetchUserData();
+                                onPressed: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    builder: (BuildContext bc) {
+                                      return SafeArea(
+                                        child: Wrap(
+                                          children: <Widget>[
+                                            ListTile(
+                                              leading: const Icon(Icons.edit),
+                                              title: const Text('Update Profile'),
+                                              onTap: () async {
+                                                Navigator.pop(bc); // Close the bottom sheet
+                                                await Navigator.pushNamed(context, '/profile_update');
+                                                Provider.of<ProfilePageViewModel>(context, listen: false).fetchUserData();
+                                              },
+                                            ),
+                                            ListTile(
+                                              leading: const Icon(Icons.logout),
+                                              title: const Text('Logout'),
+                                              onTap: () {
+                                                Navigator.pop(bc); // Close the bottom sheet
+                                                Provider.of<ProfilePageViewModel>(context, listen: false).logout(context);
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
                                 },
                               ),
                             ),
