@@ -4,6 +4,7 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:provider/provider.dart';
 import 'package:soma/core/widgets/story_unlock_card.dart';
+import 'package:soma/core/widgets/guest_registration_card.dart';
 import 'package:soma/features/story_detail_page/viewmodels/story_detail_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soma/data/story_repository.dart';
@@ -231,19 +232,28 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                     height: 24,
                   ), // Add some space before the premium card
                   // Premium gate at the end of the story
-                  if (isPremium && !_isStoryUnlocked && !isMyStory) ...[
-                    if (_currentUserTokens < 1)
-                      StoryUnlockCard(
-                        cardType: UnlockCardType.topUp,
-                        onButtonPressed: _handleTopUp,
-                        isLoading: _isUnlocking,
+                  if (isPremium) ...[
+                    if (_currentUserId == null) // Guest user
+                      GuestRegistrationCard(
+                        onRegisterPressed: () {
+                          // Navigate to registration/login page
+                          Navigator.pushNamed(context, '/register');
+                        },
                       )
-                    else
-                      StoryUnlockCard(
-                        cardType: UnlockCardType.unlock,
-                        onButtonPressed: _handleUnlockStory,
-                        isLoading: _isUnlocking,
-                      ),
+                    else if (!_isStoryUnlocked && !isMyStory) ...[
+                      if (_currentUserTokens < 1)
+                        StoryUnlockCard(
+                          cardType: UnlockCardType.topUp,
+                          onButtonPressed: _handleTopUp,
+                          isLoading: _isUnlocking,
+                        )
+                      else
+                        StoryUnlockCard(
+                          cardType: UnlockCardType.unlock,
+                          onButtonPressed: _handleUnlockStory,
+                          isLoading: _isUnlocking,
+                        ),
+                    ],
                   ],
                 ],
               ),
@@ -252,5 +262,11 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
         },
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _httpClient.close();
+    super.dispose();
   }
 }

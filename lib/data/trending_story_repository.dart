@@ -17,7 +17,8 @@ class TrendingStoryRepository {
       final response = await _client.get(Uri.parse(_trendingStoriesApiUrl));
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.cast<Map<String, dynamic>>();
       } else {
         throw Exception('Failed to load trending stories: ${response.statusCode}');
       }

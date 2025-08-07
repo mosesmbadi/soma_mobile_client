@@ -18,9 +18,7 @@ class StoryCardRow extends StatelessWidget {
     final String authorName = story['author']?['name'] ?? 'Unknown Author';
     final String thumbnailUrl = story['thumbnailUrl'] ?? '';
     final String contentSnippet = QuillUtils.extractPlainText(story['content'] ?? '[]', maxLength: 150);
-
     final int reads = story['reads'] ?? story['readCount'] ?? story['views'] ?? 0;
-    final int commentsCount = (story['comments'] as List?)?.length ?? 0;
     final double rating = (story['rating'] ?? 4.5).toDouble();
     final DateTime createdAt = DateTime.tryParse(story['createdAt'] ?? '') ?? DateTime.now();
     String formattedDate = DateFormat('MMM d').format(createdAt);
@@ -79,15 +77,6 @@ class StoryCardRow extends StatelessWidget {
                               Icon(Icons.visibility, size: 12, color: Colors.grey),
                               const SizedBox(width: 4),
                               Expanded(child: Text('$reads', style: const TextStyle(fontSize: 12, color: Colors.grey), overflow: TextOverflow.ellipsis)),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Icon(Icons.comment, size: 12, color: Colors.grey),
-                              const SizedBox(width: 4),
-                              Expanded(child: Text('$commentsCount', style: const TextStyle(fontSize: 12, color: Colors.grey), overflow: TextOverflow.ellipsis)),
                             ],
                           ),
                         ),

@@ -75,8 +75,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                 borderRadius: const BorderRadius.vertical(
                                   bottom: Radius.circular(10),
                                 ),
-                                child: Image.network(
-                                  viewModel.userData!['thumbnailUrl'] ?? 'https://images.pexels.com/photos/1687193/pexels-photo-1687193.jpeg', // Placeholder if no thumbnail
+                                child: Image.asset(
+                                  'assets/images/default_thumbnail.jpg',
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) =>
                                       Center(
@@ -311,52 +311,81 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        if (viewModel.userData!['role'] == 'reader')
-                          (viewModel.recentReads.isNotEmpty)
-                              ? Column(
-                                  children: viewModel.recentReads.map((story) => _buildRecentReadItem(
-                                        title: story['title'] ?? 'No Title',
-                                        author: story['author']?['name'] ?? 'Unknown Author',
-                                        date: story['createdAt'] != null
-                                            ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
-                                            : '',
-                                      )).toList().cast<Widget>(),
-                                )
-                              : (viewModel.trendingStories.isNotEmpty)
+                        Builder(
+                          builder: (context) {
+                            if (viewModel.userData!['role'] == 'reader') {
+                              return (viewModel.recentReads.isNotEmpty)
                                   ? Column(
-                                      children: viewModel.trendingStories.map((story) => _buildRecentReadItem(
+                                      children: viewModel.recentReads.map((story) {
+                                        if (story is Map<String, dynamic>) {
+                                          return _buildRecentReadItem(
                                             title: story['title'] ?? 'No Title',
                                             author: story['author']?['name'] ?? 'Unknown Author',
                                             date: story['createdAt'] != null
                                                 ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
                                                 : '',
-                                          )).toList().cast<Widget>(),
+                                          );
+                                        } else {
+                                          return const SizedBox.shrink(); // Or a placeholder widget
+                                        }
+                                      }).toList().cast<Widget>(),
                                     )
-                                  : const SizedBox.shrink()
-                        else if (viewModel.userData!['role'] == 'writer')
-                          (viewModel.myStories.isNotEmpty)
-                              ? Column(
-                                  children: viewModel.myStories.map((story) => _buildRecentReadItem(
-                                        title: story['title'] ?? 'No Title',
-                                        author: story['author']?['name'] ?? 'Unknown Author',
-                                        date: story['createdAt'] != null
-                                            ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
-                                            : '',
-                                      )).toList().cast<Widget>(),
-                                )
-                              : (viewModel.trendingStories.isNotEmpty)
+                                  : (viewModel.trendingStories.isNotEmpty)
+                                      ? Column(
+                                          children: viewModel.trendingStories.map((story) {
+                                            if (story is Map<String, dynamic>) {
+                                              return _buildRecentReadItem(
+                                                title: story['title'] ?? 'No Title',
+                                                author: story['author']?['name'] ?? 'Unknown Author',
+                                                date: story['createdAt'] != null
+                                                    ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
+                                                    : '',
+                                              );
+                                            } else {
+                                              return const SizedBox.shrink(); // Or a placeholder widget
+                                            }
+                                          }).toList().cast<Widget>(),
+                                        )
+                                      : const SizedBox.shrink();
+                            } else if (viewModel.userData!['role'] == 'writer') {
+                              return (viewModel.myStories.isNotEmpty)
                                   ? Column(
-                                      children: viewModel.trendingStories.map((story) => _buildRecentReadItem(
+                                      children: viewModel.myStories.map((story) {
+                                        if (story is Map<String, dynamic>) {
+                                          return _buildRecentReadItem(
                                             title: story['title'] ?? 'No Title',
                                             author: story['author']?['name'] ?? 'Unknown Author',
                                             date: story['createdAt'] != null
                                                 ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
                                                 : '',
-                                          )).toList().cast<Widget>(),
+                                          );
+                                        } else {
+                                          return const SizedBox.shrink(); // Or a placeholder widget
+                                        }
+                                      }).toList().cast<Widget>(),
                                     )
-                                  : const SizedBox.shrink()
-                        else
-                          const SizedBox.shrink(), // Handle other roles or no stories
+                                  : (viewModel.trendingStories.isNotEmpty)
+                                      ? Column(
+                                          children: viewModel.trendingStories.map((story) {
+                                            if (story is Map<String, dynamic>) {
+                                              return _buildRecentReadItem(
+                                                title: story['title'] ?? 'No Title',
+                                                author: story['author']?['name'] ?? 'Unknown Author',
+                                                date: story['createdAt'] != null
+                                                    ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
+                                                    : '',
+                                              );
+                                            } else {
+                                              return const SizedBox.shrink(); // Or a placeholder widget
+                                            }
+                                          }).toList().cast<Widget>(),
+                                        )
+                                      : const SizedBox.shrink();
+                            } else {
+                              return const SizedBox.shrink(); // Handle other roles or no stories
+                            }
+                          },
+                        ),
                       ],
                     ),
                   ),

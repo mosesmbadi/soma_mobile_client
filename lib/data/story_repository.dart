@@ -41,7 +41,8 @@ class StoryRepository {
       );
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.cast<Map<String, dynamic>>();
       } else {
         throw Exception('Failed to load your stories: ${response.statusCode}');
       }

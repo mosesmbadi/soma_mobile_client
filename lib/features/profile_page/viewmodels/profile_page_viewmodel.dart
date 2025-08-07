@@ -58,7 +58,7 @@ class ProfilePageViewModel extends ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        _userData = jsonDecode(response.body);
+        _userData = jsonDecode(response.body) as Map<String, dynamic>;
         if (_userData!['role'] == 'reader') {
           await _fetchRecentReads(token);
           if (_recentReads.isEmpty) {
