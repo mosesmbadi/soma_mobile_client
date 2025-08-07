@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill/flutter_quill.dart' show Delta, Document, QuillController, QuillEditor, QuillEditorConfig;
 import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:provider/provider.dart';
 import 'package:soma/core/widgets/premium_content_card.dart';
@@ -8,7 +8,7 @@ import 'package:soma/features/story_detail_page/viewmodels/story_detail_viewmode
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soma/data/story_repository.dart';
 import 'package:soma/data/user_repository.dart';
-import 'package:quill_delta/quill_delta.dart';
+
 
 class StoryDetailPage extends StatefulWidget {
   final Map<String, dynamic> story;
@@ -123,13 +123,6 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     print('Attempting to top up!');
   }
 
-  Delta _ensureEndsWithNewline(Delta delta) {
-    if (delta.isEmpty || !(delta.last.data is String && delta.last.data.endsWith('\n'))) {
-      delta.insert('\n');
-    }
-    return delta;
-  }
-
   @override
   Widget build(BuildContext context) {
     final String storySlug = widget.story['slug'] ?? '';
@@ -152,8 +145,8 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
           final premiumSplitIndex = (totalBlocks * 0.3).ceil();
 
           // Prevent empty delta in part1/part2
-          final part1Delta = _ensureEndsWithNewline(fullDelta.slice(0, premiumSplitIndex));
-          final part2Delta = _ensureEndsWithNewline(fullDelta.slice(premiumSplitIndex));
+          final part1Delta = fullDelta.slice(0, premiumSplitIndex);
+          final part2Delta = fullDelta.slice(premiumSplitIndex);
 
           final quillControllerPart1 = QuillController(
             document: Document.fromDelta(part1Delta),

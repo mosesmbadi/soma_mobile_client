@@ -15,7 +15,7 @@ dependencies:
   http: ^1.2.1
   shared_preferences: ^2.2.3
   google_sign_in: ^6.2.1
-  flutter_quill: ^11.4.2
+  flutter_quill: ^11.4.1
   flutter_quill_extensions: ^11.0.0
 
   
