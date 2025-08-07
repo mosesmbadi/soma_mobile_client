@@ -16,22 +16,6 @@ class ProfilePage extends StatelessWidget {
           const double profileImageRadius = 60;
 
           return Scaffold(
-            // appBar: AppBar(
-            //   backgroundColor: Colors.transparent,
-            //   elevation: 0,
-            
-            //   flexibleSpace: Container(
-            //     decoration: const BoxDecoration(
-            //       gradient: LinearGradient(
-            //         colors: [Color(0xD1E4FFFF), Color(0xD1E4FFFF)],
-            //         begin: Alignment.topLeft,
-            //         end: Alignment.bottomRight,
-            //       ),
-            //     ),
-            //   ),
-            // ),
-            // extendBodyBehindAppBar: true,
-
             body: viewModel.errorMessage.isNotEmpty
                 ? Center(
                     child: Text(
@@ -63,7 +47,7 @@ class ProfilePage extends StatelessWidget {
                                   bottom: Radius.circular(10),
                                 ),
                                 child: Image.network(
-                                  'https://images.pexels.com/photos/1687193/pexels-photo-1687193.jpeg',
+                                  viewModel.userData!['thumbnailUrl'] ?? 'https://images.pexels.com/photos/1687193/pexels-photo-1687193.jpeg', // Placeholder if no thumbnail
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) =>
                                       Center(
@@ -105,9 +89,9 @@ class ProfilePage extends StatelessWidget {
                                 ),
                                 child: CircleAvatar(
                                   radius: profileImageRadius,
-                                  backgroundImage: const NetworkImage(
-                                    'https://images.pexels.com/photos/2975709/pexels-photo-2975709.jpeg',
-                                  ),
+                                  backgroundImage: (viewModel.userData!['profilePicture'] != null && viewModel.userData!['profilePicture'] != 'default-profile.png')
+                                      ? NetworkImage(viewModel.userData!['profilePicture'])
+                                      : const NetworkImage('https://images.pexels.com/photos/2975709/pexels-photo-2975709.jpeg') as ImageProvider, // Placeholder
                                   backgroundColor: Colors.grey.shade200,
                                 ),
                               ),
@@ -130,39 +114,39 @@ class ProfilePage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Row(
-                              children: const [
-                                Icon(
+                              children: [
+                                const Icon(
                                   Icons.arrow_upward,
                                   size: 16,
                                   color: Colors.green,
                                 ),
-                                SizedBox(width: 4),
+                                const SizedBox(width: 4),
                                 Text(
-                                  '1K',
-                                  style: TextStyle(
+                                  '${viewModel.userData!['monthly_upvote'] ?? 0}',
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                SizedBox(width: 8),
+                                const SizedBox(width: 8),
                               ],
                             ),
                             Row(
-                              children: const [
-                                Icon(
+                              children: [
+                                const Icon(
                                   Icons.remove_red_eye_outlined,
                                   size: 16,
                                   color: Colors.grey,
                                 ),
-                                SizedBox(width: 4),
+                                const SizedBox(width: 4),
                                 Text(
-                                  '2K',
-                                  style: TextStyle(
+                                  '${viewModel.userData!['total_monthly_reads'] ?? 0}',
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                SizedBox(width: 8),
+                                const SizedBox(width: 8),
                               ],
                             ),
                             Container(
@@ -175,16 +159,16 @@ class ProfilePage extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Row(
-                                children: const [
-                                  Icon(
+                                children: [
+                                  const Icon(
                                     Icons.wallet,
                                     size: 18,
                                     color: Colors.black54,
                                   ),
-                                  SizedBox(width: 5),
+                                  const SizedBox(width: 5),
                                   Text(
-                                    '24 Tokens',
-                                    style: TextStyle(
+                                    '${viewModel.userData!['tokens'] ?? 0} Tokens',
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -211,9 +195,9 @@ class ProfilePage extends StatelessWidget {
                               ),
                               _buildCustomActionButton(
                                 icon: Icons.upload,
-                                label: 'Top up',
+                                label: 'Top up', // This label seems incorrect, should it be 'Upload Story'?
                                 onPressed: () =>
-                                    viewModel.showTopUpDialog(context),
+                                    viewModel.showTopUpDialog(context), // This onPressed seems incorrect
                                 backgroundColor: const Color(0xFFE0B0FF),
                                 iconColor: const Color(0xD1E4FFFF),
                               ),
