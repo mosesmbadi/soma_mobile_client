@@ -244,23 +244,23 @@ class _ProfilePageState extends State<ProfilePage> {
                                 label: 'Top up',
                                 onPressed: () =>
                                     viewModel.showTopUpDialog(context),
-                                backgroundColor: const Color(0xFFF0E6FF),
-                                iconColor: const Color(0xD1E4FFFF),
+                                backgroundColor: const Color(0xFF333333),
+                                iconColor: const Color.fromARGB(209, 255, 255, 255),
                               ),
                               _buildCustomActionButton(
                                 icon: Icons.upload,
                                 label: 'Top up', // This label seems incorrect, should it be 'Upload Story'?
                                 onPressed: () =>
                                     viewModel.showTopUpDialog(context), // This onPressed seems incorrect
-                                backgroundColor: const Color(0xFFE0B0FF),
-                                iconColor: const Color(0xD1E4FFFF),
+                                backgroundColor: const Color(0xFFD1E4FF),
+                                iconColor: const Color(0xD1333333),
                               ),
                               _buildCustomActionButton(
                                 icon: Icons.payment,
                                 label: 'Withdraw',
                                 onPressed: () =>
                                     viewModel.showWithdrawDialog(context),
-                                backgroundColor: const Color(0xFFF0E6FF),
+                                backgroundColor: const Color(0xFFE2725B),
                                 iconColor: const Color(0xD1E4FFFF),
                               ),
                             ],
