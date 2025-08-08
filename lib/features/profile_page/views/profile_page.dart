@@ -75,17 +75,35 @@ class _ProfilePageState extends State<ProfilePage> {
                                 borderRadius: const BorderRadius.vertical(
                                   bottom: Radius.circular(10),
                                 ),
-                                child: Image.asset(
-                                  'assets/images/default_thumbnail.jpg',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Center(
-                                        child: Icon(
-                                          Icons.image_not_supported,
-                                          color: Colors.white,
-                                          size: 50,
+                                child: InkWell(
+                                  onTap: () {
+                                    viewModel.pickAndUploadBannerPhoto();
+                                  },
+                                  child: (viewModel.userData!['bannerPhotoUrl'] != null && viewModel.userData!['bannerPhotoUrl'] != 'default-banner.png')
+                                      ? Image.network(
+                                          viewModel.userData!['bannerPhotoUrl']!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) =>
+                                              const Center(
+                                                child: Icon(
+                                                  Icons.image_not_supported,
+                                                  color: Colors.white,
+                                                  size: 50,
+                                                ),
+                                              ),
+                                        )
+                                      : Image.asset(
+                                          'assets/images/default_thumbnail.jpg',
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) =>
+                                              const Center(
+                                                child: Icon(
+                                                  Icons.image_not_supported,
+                                                  color: Colors.white,
+                                                  size: 50,
+                                                ),
+                                              ),
                                         ),
-                                      ),
                                 ),
                               ),
                             ),
@@ -165,6 +183,15 @@ class _ProfilePageState extends State<ProfilePage> {
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Role: ${viewModel.userData!['role'] ?? 'N/A'}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -271,6 +298,29 @@ class _ProfilePageState extends State<ProfilePage> {
                             ],
                           ),
                         ),
+                        // Request Writer Account Button (only for readers)
+                        if (viewModel.userData!['role'] == 'reader')
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 50.0, vertical: 10.0),
+                            child: ElevatedButton(
+                              onPressed: () => viewModel.requestWriterAccount(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blueAccent,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text(
+                                'Request Writer Account',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
                         const SizedBox(height: 10),
                         // Recent Reads / My Stories / Trending Stories Section
                         Padding(

@@ -71,9 +71,13 @@ class LoginPageViewModel extends ChangeNotifier {
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
         final String token = responseData['token'];
+        final String? role = responseData['role']; // Make role nullable
         if (_rememberMe) {
           await SharedPreferences.getInstance().then((prefs) {
             prefs.setString('jwt_token', token);
+            if (role != null) {
+              prefs.setString('user_role', role); // Store user role only if not null
+            }
           });
         }
         
@@ -124,9 +128,13 @@ class LoginPageViewModel extends ChangeNotifier {
           if (response.statusCode == 200) {
             final Map<String, dynamic> responseData = jsonDecode(response.body);
             final String token = responseData['token'];
+            final String? role = responseData['role']; // Make role nullable
             if (_rememberMe) {
               await SharedPreferences.getInstance().then((prefs) {
                 prefs.setString('jwt_token', token);
+                if (role != null) {
+                  prefs.setString('user_role', role); // Store user role only if not null
+                }
               });
             }
             print('Successfully received JWT from backend. Navigating to home.');

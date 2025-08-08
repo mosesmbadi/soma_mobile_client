@@ -62,7 +62,7 @@ class BottomNavShell extends StatelessWidget {
                           currentIndex: viewModel.selectedIndex,
                           selectedItemColor: Colors.blueAccent,
                           unselectedItemColor: Colors.grey,
-                          onTap: viewModel.onItemTapped,
+                          onTap: (index) => viewModel.onItemTapped(index, context),
                           type: BottomNavigationBarType.fixed,
                           backgroundColor: Colors.transparent,
                           elevation: 0,

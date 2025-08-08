@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/story_repository.dart';
 import '../../../data/trending_story_repository.dart';
 
@@ -10,18 +11,29 @@ class HomePageViewModel extends ChangeNotifier {
   List<dynamic> _trendingStories = [];
   String _errorMessage = '';
   bool _isLoading = true;
+  String? _userRole; // Added to store user role
 
   int get selectedIndex => _selectedIndex;
   List<dynamic> get stories => _stories;
   List<dynamic> get trendingStories => _trendingStories;
   String get errorMessage => _errorMessage;
   bool get isLoading => _isLoading;
+  String? get userRole => _userRole; // Getter for user role
 
   HomePageViewModel() {
     fetchStories();
   }
 
-  void onItemTapped(int index) {
+  void onItemTapped(int index, BuildContext context) {
+    if (index == 2 && _userRole == 'reader') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Readers cannot upload stories. Please request a writer account.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
     _selectedIndex = index;
     notifyListeners();
   }
@@ -30,6 +42,10 @@ class HomePageViewModel extends ChangeNotifier {
     _isLoading = true;
     _errorMessage = '';
     notifyListeners();
+
+    // Fetch user role from SharedPreferences
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    _userRole = prefs.getString('user_role'); // Assuming role is stored here
 
     try {
       _stories = await _storyRepository.fetchStories();

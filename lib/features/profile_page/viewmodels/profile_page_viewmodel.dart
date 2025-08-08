@@ -66,6 +66,10 @@ class ProfilePageViewModel extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         _userData = jsonDecode(response.body) as Map<String, dynamic>;
+        // Store user role in SharedPreferences
+        if (_userData!['role'] != null) {
+          _prefs.setString('user_role', _userData!['role']);
+        }
         logger.d('User data fetched successfully: $_userData');
         if (_userData!['role'] == 'reader') {
           logger.d('User is a reader. Fetching recent reads.');
@@ -195,9 +199,6 @@ class ProfilePageViewModel extends ChangeNotifier {
       // 2. Crop Image (Optional but Recommended)
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: pickedFile.path,
-        aspectRatioPresets: [
-          CropAspectRatioPreset.square, // Ideal for profile photos
-        ],
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'Crop Profile Photo',
@@ -205,11 +206,17 @@ class ProfilePageViewModel extends ChangeNotifier {
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: true,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.square,
+            ],
           ),
           IOSUiSettings(
             title: 'Crop Profile Photo',
             aspectRatioLockEnabled: true,
             aspectRatioLockDimensionSwapEnabled: true,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.square,
+            ],
           ),
         ],
       );
@@ -255,6 +262,128 @@ class ProfilePageViewModel extends ChangeNotifier {
       logger.e('Exception during photo upload: $e');
     } finally {
       notifyListeners(); // Notify listeners to update the UI
+    }
+  }
+
+  Future<void> pickAndUploadBannerPhoto() async {
+    _errorMessage = '';
+    notifyListeners();
+
+    try {
+      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile == null) {
+        logger.d('User cancelled banner image picking.');
+        return;
+      }
+
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: pickedFile.path,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Banner Photo',
+            toolbarColor: Colors.deepPurple,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.ratio16x9,
+            lockAspectRatio: true,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.ratio16x9,
+            ],
+          ),
+          IOSUiSettings(
+            title: 'Crop Banner Photo',
+            aspectRatioLockEnabled: true,
+            aspectRatioLockDimensionSwapEnabled: true,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.ratio16x9,
+            ],
+          ),
+        ],
+      );
+
+      if (croppedFile == null) {
+        logger.d('User cancelled banner image cropping.');
+        return;
+      }
+
+      final String? token = _prefs.getString('jwt_token');
+      if (token == null) {
+        _errorMessage = 'No authentication token found. Please log in.';
+        logger.e('Attempted to upload banner photo without token.');
+        notifyListeners();
+        return;
+      }
+
+      final File imageFile = File(croppedFile.path);
+      final uri = Uri.parse('${Environment.backendUrl}/api/users/banner/photo'); // New backend endpoint for banner
+      final request = http.MultipartRequest('PUT', uri)
+        ..headers['Authorization'] = 'Bearer $token'
+        ..files.add(await http.MultipartFile.fromPath('bannerPhoto', imageFile.path)); // 'bannerPhoto' is the field name your backend expects
+
+      logger.d('Uploading banner photo...');
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final responseBody = await response.stream.bytesToString();
+        final Map<String, dynamic> data = jsonDecode(responseBody);
+        _userData?['bannerPhotoUrl'] = data['bannerPhotoUrl']; // Update local data
+        logger.d('Banner photo uploaded successfully. New URL: ${_userData?['bannerPhotoUrl']}');
+        _errorMessage = '';
+      } else {
+        final errorBody = await response.stream.bytesToString();
+        _errorMessage = 'Failed to upload banner photo: ${response.statusCode} - $errorBody';
+        logger.e('Failed to upload banner photo: ${response.statusCode} - $errorBody');
+      }
+    } catch (e) {
+      _errorMessage = 'An error occurred during banner photo upload: $e';
+      logger.e('Exception during banner photo upload: $e');
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> requestWriterAccount(BuildContext context) async {
+    _errorMessage = '';
+    notifyListeners();
+
+    final String? token = _prefs.getString('jwt_token');
+
+    if (token == null) {
+      _errorMessage = 'No authentication token found. Please log in.';
+      logger.e('Attempted to request writer account without token.');
+      notifyListeners();
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('${Environment.backendUrl}/api/users/writer-request'),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Writer account request sent successfully!')),
+        );
+        logger.d('Writer account request sent successfully.');
+      } else {
+        final errorBody = jsonDecode(response.body);
+        _errorMessage = errorBody['message'] ?? 'Failed to send writer account request.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_errorMessage)),
+        );
+        logger.e('Failed to send writer account request: ${response.statusCode} - $_errorMessage');
+      }
+    } catch (e) {
+      _errorMessage = 'An error occurred while requesting writer account: $e';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_errorMessage)),
+      );
+      logger.e('Exception during writer account request: $e');
+    } finally {
+      notifyListeners();
     }
   }
 }
