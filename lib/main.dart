@@ -9,6 +9,7 @@ import 'package:soma/features/add_story_page/views/add_story_page.dart';
 import 'package:soma/core/widgets/bottom_nav.dart';
 import 'package:soma/features/registration_page/views/registration_page.dart';
 import 'package:soma/features/profile_page/views/profile_update_page.dart';
+import 'package:soma/core/widgets/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -37,7 +38,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      home: const LandingPage(),
+      home: const SplashScreen(),
       routes: {
         '/login': (context) => const LoginPage(),
         '/guest_stories': (context) => const GuestStoriesPage(),

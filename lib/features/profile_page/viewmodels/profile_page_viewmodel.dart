@@ -3,12 +3,15 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soma/features/landing_page/views/landing_page.dart';
+import 'package:logger/logger.dart';
 import '../../../core/config/environment.dart';
 import 'package:soma/data/user_repository.dart';
 import 'package:soma/data/story_repository.dart';
 import 'package:soma/data/trending_story_repository.dart';
 
 const String apiUrl = '${Environment.backendUrl}/api/auth/me';
+
+final Logger logger = Logger();
 
 class ProfilePageViewModel extends ChangeNotifier {
   Map<String, dynamic>? _userData;
@@ -44,6 +47,7 @@ class ProfilePageViewModel extends ChangeNotifier {
 
     if (token == null) {
       _errorMessage = 'No authentication token found. Please log in.';
+      logger.d('No authentication token found.');
       notifyListeners();
       return;
     }
@@ -59,22 +63,29 @@ class ProfilePageViewModel extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         _userData = jsonDecode(response.body) as Map<String, dynamic>;
+        logger.d('User data fetched successfully: $_userData');
         if (_userData!['role'] == 'reader') {
+          logger.d('User is a reader. Fetching recent reads.');
           await _fetchRecentReads(token);
           if (_recentReads.isEmpty) {
+            logger.d('No recent reads found. Fetching trending stories.');
             await _fetchTrendingStories();
           }
         } else if (_userData!['role'] == 'writer') {
+          logger.d('User is a writer. Fetching my stories.');
           await _fetchMyStories(token);
           if (_myStories.isEmpty) {
+            logger.d('No stories found. Fetching trending stories.');
             await _fetchTrendingStories();
           }
         }
       } else {
         _errorMessage = 'Failed to load user data: ${response.statusCode}';
+        logger.e('Failed to load user data: ${response.statusCode}');
       }
     } catch (e) {
       _errorMessage = 'An error occurred: $e';
+      logger.e('An error occurred while fetching user data: $e');
     } finally {
       notifyListeners();
     }
@@ -83,8 +94,9 @@ class ProfilePageViewModel extends ChangeNotifier {
   Future<void> _fetchRecentReads(String token) async {
     try {
       _recentReads = await _userRepository.fetchRecentReads(token);
+      logger.d('Recent reads fetched successfully: $_recentReads');
     } catch (e) {
-      print('Error fetching recent reads: $e');
+      logger.e('Error fetching recent reads: $e');
       _errorMessage = 'Failed to load recent reads: $e';
     }
   }
@@ -92,8 +104,9 @@ class ProfilePageViewModel extends ChangeNotifier {
   Future<void> _fetchMyStories(String token) async {
     try {
       _myStories = await _storyRepository.fetchMyStories(token);
+      logger.d('My stories fetched successfully: $_myStories');
     } catch (e) {
-      print('Error fetching my stories: $e');
+      logger.e('Error fetching my stories: $e');
       _errorMessage = 'Failed to load my stories: $e';
     }
   }
@@ -101,8 +114,9 @@ class ProfilePageViewModel extends ChangeNotifier {
   Future<void> _fetchTrendingStories() async {
     try {
       _trendingStories = await _trendingStoryRepository.fetchTrendingStories();
+      logger.d('Trending stories fetched successfully: $_trendingStories');
     } catch (e) {
-      print('Error fetching trending stories: $e');
+      logger.e('Error fetching trending stories: $e');
       _errorMessage = 'Failed to load trending stories: $e';
     }
   }
