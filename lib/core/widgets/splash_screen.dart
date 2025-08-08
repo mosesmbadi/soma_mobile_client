@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soma/features/landing_page/views/landing_page.dart'; // Import your landing page
 
 class SplashScreen extends StatefulWidget {
@@ -16,17 +17,19 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   _navigateToNextScreen() async {
-    // Simulate any app initialization or data loading here
-    await Future.delayed(const Duration(seconds: 3)); // Simulate a 3-second loading time
+    await Future.delayed(const Duration(seconds: 3));
 
-    // After loading, navigate to the main screen of your app
-    // For now, we'll navigate to LandingPage. You can add logic here
-    // to check if a user is logged in and navigate to BottomNavShell if so.
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('jwt_token');
+
     if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LandingPage()),
-      );
+      if (token != null && token.isNotEmpty) {
+        // Token exists, navigate to home
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        // No token, navigate to login
+        Navigator.pushReplacementNamed(context, '/login');
+      }
     }
   }
 

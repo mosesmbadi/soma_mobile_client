@@ -8,6 +8,9 @@ import '../../../core/config/environment.dart';
 import 'package:soma/data/user_repository.dart';
 import 'package:soma/data/story_repository.dart';
 import 'package:soma/data/trending_story_repository.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'dart:io';
 
 const String apiUrl = '${Environment.backendUrl}/api/auth/me';
 
@@ -173,5 +176,85 @@ class ProfilePageViewModel extends ChangeNotifier {
         );
       },
     );
+  }
+
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> pickAndUploadProfilePhoto() async {
+    _errorMessage = '';
+    notifyListeners();
+
+    try {
+      // 1. Pick Image
+      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile == null) {
+        logger.d('User cancelled image picking.');
+        return; // User cancelled
+      }
+
+      // 2. Crop Image (Optional but Recommended)
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: pickedFile.path,
+        aspectRatioPresets: [
+          CropAspectRatioPreset.square, // Ideal for profile photos
+        ],
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Profile Photo',
+            toolbarColor: Colors.deepPurple,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(
+            title: 'Crop Profile Photo',
+            aspectRatioLockEnabled: true,
+            aspectRatioLockDimensionSwapEnabled: true,
+          ),
+        ],
+      );
+
+      if (croppedFile == null) {
+        logger.d('User cancelled image cropping.');
+        return; // User cancelled cropping
+      }
+
+      // 3. Upload Image to Backend
+      final String? token = _prefs.getString('jwt_token');
+      if (token == null) {
+        _errorMessage = 'No authentication token found. Please log in.';
+        logger.e('Attempted to upload photo without token.');
+        notifyListeners();
+        return;
+      }
+
+      final File imageFile = File(croppedFile.path);
+      // Assuming your backend endpoint for profile photo upload is /api/users/profile/photo
+      final uri = Uri.parse('${Environment.backendUrl}/api/users/profile/photo');
+      final request = http.MultipartRequest('PUT', uri) // Or POST, depending on your backend
+        ..headers['Authorization'] = 'Bearer $token'
+        ..files.add(await http.MultipartFile.fromPath('profilePhoto', imageFile.path)); // 'profilePhoto' is the field name your backend expects
+
+      logger.d('Uploading profile photo...');
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final responseBody = await response.stream.bytesToString();
+        final Map<String, dynamic> data = jsonDecode(responseBody);
+        // The backend now sends back the S3 URL, update local data
+        _userData?['profilePhotoUrl'] = data['profilePhotoUrl'];
+        logger.d('Profile photo uploaded successfully. New URL: ${_userData?['profilePhotoUrl']}');
+        _errorMessage = ''; // Clear any previous error messages
+      } else {
+        final errorBody = await response.stream.bytesToString();
+        _errorMessage = 'Failed to upload photo: ${response.statusCode} - $errorBody';
+        logger.e('Failed to upload profile photo: ${response.statusCode} - $errorBody');
+      }
+    } catch (e) {
+      _errorMessage = 'An error occurred during photo upload: $e';
+      logger.e('Exception during photo upload: $e');
+    } finally {
+      notifyListeners(); // Notify listeners to update the UI
+    }
   }
 }

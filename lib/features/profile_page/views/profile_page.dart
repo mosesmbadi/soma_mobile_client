@@ -141,12 +141,17 @@ class _ProfilePageState extends State<ProfilePage> {
                                     width: 4,
                                   ),
                                 ),
-                                child: CircleAvatar(
-                                  radius: profileImageRadius,
-                                  backgroundImage: (viewModel.userData!['profilePicture'] != null && viewModel.userData!['profilePicture'] != 'default-profile.png')
-                                      ? NetworkImage(viewModel.userData!['profilePicture'])
-                                      : const NetworkImage('https://images.pexels.com/photos/2975709/pexels-photo-2975709.jpeg') as ImageProvider, // Placeholder
-                                  backgroundColor: Colors.grey.shade200,
+                                child: InkWell(
+                                  onTap: () {
+                                    viewModel.pickAndUploadProfilePhoto();
+                                  },
+                                  child: CircleAvatar(
+                                    radius: profileImageRadius,
+                                    backgroundImage: (viewModel.userData!['profilePhotoUrl'] != null && viewModel.userData!['profilePhotoUrl'] != 'default-profile.png')
+                                        ? NetworkImage(viewModel.userData!['profilePhotoUrl']!)
+                                        : const AssetImage('assets/images/default_thumbnail.jpg') as ImageProvider, // Placeholder
+                                    backgroundColor: Colors.grey.shade200,
+                                  ),
                                 ),
                               ),
                             ),
@@ -260,8 +265,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                 label: 'Withdraw',
                                 onPressed: () =>
                                     viewModel.showWithdrawDialog(context),
-                                backgroundColor: const Color(0xFFE2725B),
-                                iconColor: const Color(0xD1E4FFFF),
+                                backgroundColor: const Color(0xFFCFFDBC),
+                                iconColor: const Color(0xD1333333),
                               ),
                             ],
                           ),
