@@ -14,7 +14,12 @@ class StoryCardGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String title = story['title'] ?? 'No Title';
-    final String authorName = story['author']?['name'] ?? 'Unknown Author';
+    final dynamic authorData = story['author'];
+    final String authorName = (authorData is Map<String, dynamic>)
+        ? authorData['name'] ?? 'Unknown Author'
+        : (authorData is String)
+            ? authorData
+            : 'Unknown Author';
     final String thumbnailUrl = story['thumbnailUrl'] ?? '';
     final String contentSnippet = QuillUtils.extractPlainText(story['content'] ?? '[]', maxLength: 100);
 

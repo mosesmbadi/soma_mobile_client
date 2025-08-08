@@ -320,7 +320,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                         if (story is Map<String, dynamic>) {
                                           return _buildRecentReadItem(
                                             title: story['title'] ?? 'No Title',
-                                            author: story['author']?['name'] ?? 'Unknown Author',
+                                            author: (story['author'] is Map<String, dynamic>)
+                                                ? story['author']['name'] ?? 'Unknown Author'
+                                                : (story['author'] is String)
+                                                    ? story['author']
+                                                    : 'Unknown Author',
                                             date: story['createdAt'] != null
                                                 ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
                                                 : '',
@@ -336,7 +340,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                             if (story is Map<String, dynamic>) {
                                               return _buildRecentReadItem(
                                                 title: story['title'] ?? 'No Title',
-                                                author: story['author']?['name'] ?? 'Unknown Author',
+                                                author: (story['author'] is Map<String, dynamic>)
+                                                ? story['author']['name'] ?? 'Unknown Author'
+                                                : (story['author'] is String)
+                                                    ? story['author']
+                                                    : 'Unknown Author',
                                                 date: story['createdAt'] != null
                                                     ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
                                                     : '',
@@ -354,7 +362,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                         if (story is Map<String, dynamic>) {
                                           return _buildRecentReadItem(
                                             title: story['title'] ?? 'No Title',
-                                            author: story['author']?['name'] ?? 'Unknown Author',
+                                            author: (story['author'] is Map<String, dynamic>)
+                                                ? story['author']['name'] ?? 'Unknown Author'
+                                                : (story['author'] is String)
+                                                    ? story['author']
+                                                    : 'Unknown Author',
                                             date: story['createdAt'] != null
                                                 ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
                                                 : '',
@@ -370,7 +382,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                             if (story is Map<String, dynamic>) {
                                               return _buildRecentReadItem(
                                                 title: story['title'] ?? 'No Title',
-                                                author: story['author']?['name'] ?? 'Unknown Author',
+                                                author: (story['author'] is Map<String, dynamic>)
+                                                ? story['author']['name'] ?? 'Unknown Author'
+                                                : (story['author'] is String)
+                                                    ? story['author']
+                                                    : 'Unknown Author',
                                                 date: story['createdAt'] != null
                                                     ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
                                                     : '',

@@ -12,7 +12,7 @@ class StoryRepository {
 
   StoryRepository({http.Client? client}) : _client = client ?? http.Client();
   // fetch list of stories for the loggedin user
-  final String _myStoriesApiUrl = '${Environment.backendUrl}/api/stories/me';
+  final String _myStoriesApiUrl = '${Environment.backendUrl}/api/stories/my-stories';
   // fetch list of unlocked stories for the loggedin user
   final String _unlockedStoriesApiUrl = '${Environment.backendUrl}/api/stories/user/unlocked';
 
@@ -44,7 +44,7 @@ class StoryRepository {
         final List<dynamic> data = jsonDecode(response.body);
         return data.cast<Map<String, dynamic>>();
       } else {
-        throw Exception('Failed to load your stories: ${response.statusCode}');
+        throw Exception('Failed to load your stories: ${response.statusCode}. Body: ${response.body}');
       }
     } catch (e) {
       throw Exception('An error occurred: $e');
