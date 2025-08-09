@@ -38,9 +38,14 @@ class AddStoryViewModel extends ChangeNotifier {
   List<String> get selectedTagIds => _selectedTagIds; // New
   String get tagsErrorMessage => _tagsErrorMessage; // New
 
-  AddStoryViewModel({http.Client? httpClient, SharedPreferences? sharedPreferences}) {
+  final http.Client _httpClient;
+  final SharedPreferences _sharedPreferences; // Make it final
+
+  AddStoryViewModel({http.Client? httpClient, required SharedPreferences sharedPreferences}) // Require SharedPreferences
+      : _httpClient = httpClient ?? http.Client(),
+        _sharedPreferences = sharedPreferences { // Initialize directly
     _loadSavedStory();
-    _fetchTags(); // New
+    _fetchTags();
   }
 
   @override
@@ -53,22 +58,24 @@ class AddStoryViewModel extends ChangeNotifier {
   }
 
   Future<void> _fetchTags() async {
+    print('Entering _fetchTags()');
     _isLoading = true;
     _tagsErrorMessage = '';
     notifyListeners();
 
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String? token = prefs.getString('jwt_token');
+      final String? token = _sharedPreferences.getString('jwt_token');
+      print('Fetching tags. Token: $token, API URL: $tagsApiUrl');
 
       if (token == null) {
         _tagsErrorMessage = 'Authentication token not found. Cannot fetch tags.';
         _isLoading = false;
         notifyListeners();
+        print('Tags fetch failed: Authentication token not found.');
         return;
       }
 
-      final response = await http.get(
+      final response = await _httpClient.get(
         Uri.parse(tagsApiUrl),
         headers: <String, String>{
           'Authorization': 'Bearer $token',
@@ -76,14 +83,20 @@ class AddStoryViewModel extends ChangeNotifier {
         },
       );
 
+      print('Tags API response status: ${response.statusCode}');
+      print('Tags API response body: ${response.body}');
+
       if (response.statusCode == 200) {
         _availableTags = jsonDecode(response.body);
+        print('Available tags: $_availableTags');
       } else {
         final Map<String, dynamic> errorData = jsonDecode(response.body);
         _tagsErrorMessage = errorData['message'] ?? 'Failed to fetch tags.';
+        print('Tags fetch failed: $_tagsErrorMessage');
       }
     } catch (e) {
       _tagsErrorMessage = 'An error occurred while fetching tags: $e';
+      print('Tags fetch failed with exception: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -104,9 +117,8 @@ class AddStoryViewModel extends ChangeNotifier {
   }
 
   Future<void> _loadSavedStory() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? savedTitle = prefs.getString('draft_story_title');
-    final String? savedContent = prefs.getString('draft_story_content');
+    final String? savedTitle = _sharedPreferences.getString('draft_story_title');
+    final String? savedContent = _sharedPreferences.getString('draft_story_content');
 
     if (savedTitle != null && savedContent != null) {
       _titleController.text = savedTitle;
@@ -125,9 +137,8 @@ class AddStoryViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('draft_story_title', _titleController.text);
-      await prefs.setString(
+      await _sharedPreferences.setString('draft_story_title', _titleController.text);
+      await _sharedPreferences.setString(
         'draft_story_content',
         jsonEncode(_controller.document.toDelta().toJson()),
       );
@@ -165,8 +176,7 @@ class AddStoryViewModel extends ChangeNotifier {
       return;
     }
 
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? token = prefs.getString('jwt_token');
+    final String? token = _sharedPreferences.getString('jwt_token');
 
     if (token == null) {
       _errorMessage = 'No authentication token found. Please log in.';
@@ -197,7 +207,7 @@ class AddStoryViewModel extends ChangeNotifier {
     final String contentToSend = jsonEncode(modifiedDocOperations);
 
     try {
-      final response = await http.post(
+      final response = await _httpClient.post(
         Uri.parse(apiUrl),
         headers: <String, String>{
           'Authorization': 'Bearer $token',
@@ -219,8 +229,8 @@ class AddStoryViewModel extends ChangeNotifier {
         _titleController.clear();
         _controller.clear();
         _selectedTagIds.clear(); // New
-        await prefs.remove('draft_story_title');
-        await prefs.remove('draft_story_content');
+        await _sharedPreferences.remove('draft_story_title');
+        await _sharedPreferences.remove('draft_story_content');
       } else {
         final Map<String, dynamic> errorData = jsonDecode(response.body);
         _errorMessage = errorData['message'] ?? 'Failed to publish story.';
@@ -263,7 +273,6 @@ class AddStoryViewModel extends ChangeNotifier {
     _controller.formatSelection(Attribute.clone(Attribute.italic, null));
     _controller.formatSelection(Attribute.clone(Attribute.underline, null));
     _controller.formatSelection(Attribute.clone(Attribute.strikeThrough, null));
-    _controller.formatSelection(Attribute.clone(Attribute.link, null));
     _controller.formatSelection(Attribute.clone(Attribute.align, null));
     _controller.formatSelection(Attribute.clone(Attribute.direction, null));
     _controller.formatSelection(Attribute.clone(Attribute.list, null));

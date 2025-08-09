@@ -12,6 +12,7 @@ class LoginPageViewModel extends ChangeNotifier {
   final TextEditingController _passwordController = TextEditingController();
   String _errorMessage = '';
   bool _isPasswordVisible = false;
+  bool _rememberMe = false; // New field
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     // This should be the google's Client ID for Web application (not the one for android)
@@ -23,6 +24,7 @@ class LoginPageViewModel extends ChangeNotifier {
   TextEditingController get passwordController => _passwordController;
   String get errorMessage => _errorMessage;
   bool get isPasswordVisible => _isPasswordVisible;
+  bool get rememberMe => _rememberMe; // New getter
 
   @override
   void dispose() {
@@ -33,6 +35,11 @@ class LoginPageViewModel extends ChangeNotifier {
 
   void togglePasswordVisibility() {
     _isPasswordVisible = !_isPasswordVisible;
+    notifyListeners();
+  }
+
+  void toggleRememberMe(bool? value) {
+    _rememberMe = value ?? false;
     notifyListeners();
   }
 
@@ -66,6 +73,7 @@ class LoginPageViewModel extends ChangeNotifier {
         final String token = responseData['token'];
         await SharedPreferences.getInstance().then((prefs) {
           prefs.setString('jwt_token', token);
+          prefs.setBool('remember_me', _rememberMe); // Save remember me preference
         });
         
 
@@ -117,6 +125,7 @@ class LoginPageViewModel extends ChangeNotifier {
             final String token = responseData['token'];
             await SharedPreferences.getInstance().then((prefs) {
               prefs.setString('jwt_token', token);
+              prefs.setBool('remember_me', _rememberMe); // Save remember me preference
             });
             print('Successfully received JWT from backend. Navigating to home.');
 

@@ -11,16 +11,17 @@ import 'add_story_viewmodel_test.mocks.dart'; // This file will be generated
 // flutter test test/features/add_story_page/add_story_viewmodel_test.dart
 
 
-@GenerateMocks([http.Client, SharedPreferences])
+@GenerateMocks([http.Client, SharedPreferences]) // Add SharedPreferences back here
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('AddStoryViewModel', () {
     late AddStoryViewModel viewModel;
     late MockClient mockHttpClient;
-    late MockSharedPreferences mockSharedPreferences;
+    late MockSharedPreferences mockSharedPreferences; // Declare it
 
     setUp(() {
       mockHttpClient = MockClient();
-      mockSharedPreferences = MockSharedPreferences();
+      mockSharedPreferences = MockSharedPreferences(); // Initialize mock
 
       // Stub for _loadSavedStory in the main setUp, for tests that don't re-initialize viewModel
       when(mockSharedPreferences.getString('draft_story_title')).thenReturn(null);
@@ -60,9 +61,8 @@ void main() {
 
     test('fetchTags handles missing authentication token on initialization', () async {
       // Arrange: Re-initialize viewModel with a different mock setup for this test
-      mockSharedPreferences = MockSharedPreferences();
-      when(mockSharedPreferences.getString('jwt_token'))
-          .thenReturn(null);
+      mockSharedPreferences = MockSharedPreferences(); // Re-initialize mock for this test
+      when(mockSharedPreferences.getString('jwt_token')).thenReturn(null); // Set token to null for this test
       // Stub for _loadSavedStory for this specific test
       when(mockSharedPreferences.getString('draft_story_title')).thenReturn(null);
       when(mockSharedPreferences.getString('draft_story_content')).thenReturn(null);
@@ -84,13 +84,12 @@ void main() {
 
     test('fetchTags handles API error on initialization', () async {
       // Arrange: Re-initialize viewModel with a different mock setup for this test
-      mockSharedPreferences = MockSharedPreferences();
-      when(mockSharedPreferences.getString('jwt_token'))
-          .thenReturn('test_token');
+      mockSharedPreferences = MockSharedPreferences(); // Re-initialize mock for this test
+      when(mockSharedPreferences.getString('jwt_token')).thenReturn('test_token'); // Set token for this test
       when(mockHttpClient.get(
         any,
         headers: anyNamed('headers'),
-      )).thenAnswer((_) async => http.Response('{"message": "Failed to fetch"}', 400));
+      )).thenAnswer((_) async => http.Response('{"message": "Failed to fetch"}', 400)); // Ensure valid JSON
       // Stub for _loadSavedStory for this specific test
       when(mockSharedPreferences.getString('draft_story_title')).thenReturn(null);
       when(mockSharedPreferences.getString('draft_story_content')).thenReturn(null);
@@ -111,9 +110,8 @@ void main() {
 
     test('fetchTags handles network error on initialization', () async {
       // Arrange: Re-initialize viewModel with a different mock setup for this test
-      mockSharedPreferences = MockSharedPreferences();
-      when(mockSharedPreferences.getString('jwt_token'))
-          .thenReturn('test_token');
+      mockSharedPreferences = MockSharedPreferences(); // Re-initialize mock for this test
+      when(mockSharedPreferences.getString('jwt_token')).thenReturn('test_token'); // Set token for this test
       when(mockHttpClient.get(
         any,
         headers: anyNamed('headers'),

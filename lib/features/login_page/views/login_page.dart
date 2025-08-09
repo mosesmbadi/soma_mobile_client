@@ -207,9 +207,9 @@ class LoginPage extends StatelessWidget {
                                           width: 24,
                                           height: 24,
                                           child: Checkbox(
-                                            value: false,
+                                            value: viewModel.rememberMe,
                                             onChanged: (bool? value) {
-                                              // viewModel.toggleRememberMe(value); # TODO: Uncomment and implement
+                                              viewModel.toggleRememberMe(value);
                                             },
                                             activeColor: const Color(
                                               0xD1E4FFFF,

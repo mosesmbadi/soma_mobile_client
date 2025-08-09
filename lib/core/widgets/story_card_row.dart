@@ -85,38 +85,33 @@ class StoryCardRow extends StatelessWidget {
                             ],
                           ),
                         ),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Icon(Icons.star, size: 12, color: Colors.amber),
-                              const SizedBox(width: 4),
-                              Expanded(child: Text('$rating', style: const TextStyle(fontSize: 12, color: Colors.grey), overflow: TextOverflow.ellipsis)),
-                            ],
+
+                        // Display Tags
+                        if (story['tags'] != null && story['tags'].isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2.0),
+                            child: Wrap(
+                              spacing: 2.0, // reduced spacing between chips
+                              runSpacing: 0.0,
+                              children: (story['tags'] as List<dynamic>).map((tag) {
+                                final Map<String, dynamic> tagMap = tag as Map<String, dynamic>;
+                                return Chip(
+                                  label: Text(
+                                    tagMap['name'],
+                                    style: const TextStyle(fontSize: 9, color: Color(0xFFFFFFFF)), // smaller font
+                                  ),
+                                  backgroundColor: Color(0xFF333333),
+                                  labelPadding: const EdgeInsets.symmetric(horizontal: 4.0), // less padding
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: const VisualDensity(horizontal: -2.0, vertical: -4.0), // more compact
+                                  padding: EdgeInsets.zero, // minimal padding
+                                );
+                              }).toList(),
+                            ),
                           ),
-                        ),
                       ],
                     ),
-                    // Display Tags
-                    if (story['tags'] != null && story['tags'].isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Wrap(
-                          spacing: 6.0,
-                          runSpacing: 0.0,
-                          children: (story['tags'] as List<dynamic>).map((tag) {
-                            final Map<String, dynamic> tagMap = tag as Map<String, dynamic>;
-                            return Chip(
-                              label: Text(
-                                tagMap['name'],
-                                style: const TextStyle(fontSize: 10, color: Colors.white),
-                              ),
-                              backgroundColor: Colors.blueGrey.withOpacity(0.7),
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              visualDensity: VisualDensity.compact,
-                            );
-                          }).toList(),
-                        ),
-                      ),
+
                   ],
                 ),
               ),

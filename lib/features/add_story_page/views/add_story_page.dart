@@ -3,6 +3,8 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:provider/provider.dart';
 import 'package:soma/features/add_story_page/viewmodels/add_story_viewmodel.dart';
+import 'package:http/http.dart' as http; // Added import
+import 'package:shared_preferences/shared_preferences.dart'; // Added import
 
 class AddStoryPage extends StatelessWidget {
   const AddStoryPage({super.key});
@@ -11,7 +13,10 @@ class AddStoryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     print('Building AddStoryPage');
     return ChangeNotifierProvider(
-      create: (_) => AddStoryViewModel(httpClient: null, sharedPreferences: null),
+      create: (context) => AddStoryViewModel(
+        httpClient: Provider.of<http.Client>(context, listen: false),
+        sharedPreferences: Provider.of<SharedPreferences>(context, listen: false),
+      ),
       child: Consumer<AddStoryViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(

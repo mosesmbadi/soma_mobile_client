@@ -9,13 +9,37 @@ import 'package:soma/features/add_story_page/views/add_story_page.dart';
 import 'package:soma/core/widgets/bottom_nav.dart';
 import 'package:soma/features/registration_page/views/registration_page.dart';
 import 'package:soma/features/profile_page/views/profile_update_page.dart';
+import 'package:provider/provider.dart'; // Import provider
+import 'package:http/http.dart' as http; // Import http
+import 'package:shared_preferences/shared_preferences.dart'; // Import shared_preferences
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async { // Make main async
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter binding is initialized
+  final SharedPreferences prefs = await SharedPreferences.getInstance(); // Get SharedPreferences instance
+  final String? token = prefs.getString('jwt_token'); // Get token
+  final bool? rememberMe = prefs.getBool('remember_me'); // Get remember_me flag
+
+  Widget defaultHome = const LandingPage(); // Default to LandingPage
+
+  if (token != null && rememberMe == true) {
+    defaultHome = const BottomNavShell(); // Navigate to home if remembered
+  }
+
+  runApp(
+    MultiProvider(
+      providers: [
+        Provider<http.Client>(create: (_) => http.Client()),
+        Provider<SharedPreferences>(create: (_) => prefs), // Provide the obtained instance
+      ],
+      child: MyApp(defaultHome: defaultHome), // Pass defaultHome to MyApp
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Widget defaultHome; // New field
+
+  const MyApp({super.key, required this.defaultHome}); // New constructor
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +61,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      home: const LandingPage(),
+      home: defaultHome,
       routes: {
         '/login': (context) => const LoginPage(),
         '/guest_stories': (context) => const GuestStoriesPage(),
