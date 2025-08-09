@@ -20,14 +20,17 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _initializeData();
+    _loadPrefsAndInitViewModel();
   }
 
-  Future<void> _initializeData() async {
+  Future<void> _loadPrefsAndInitViewModel() async {
     _prefs = await SharedPreferences.getInstance();
     _viewModel = ProfilePageViewModel(prefs: _prefs);
-    setState(() {
-      _isInitialized = true;
+    // Ensure context is available before calling fetchUserData
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _viewModel.fetchUserData(context);
+      _isInitialized = true; // Set to true after data is fetched
+      setState(() {});
     });
   }
 
@@ -126,7 +129,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                               onTap: () async {
                                                 Navigator.pop(bc); // Close the bottom sheet
                                                 await Navigator.pushNamed(context, '/profile_update');
-                                                Provider.of<ProfilePageViewModel>(context, listen: false).fetchUserData();
+                                                Provider.of<ProfilePageViewModel>(context, listen: false).fetchUserData(context);
                                               },
                                             ),
                                             ListTile(

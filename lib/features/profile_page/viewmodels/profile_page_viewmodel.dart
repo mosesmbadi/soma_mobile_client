@@ -38,11 +38,9 @@ class ProfilePageViewModel extends ChangeNotifier {
       : _prefs = prefs,
         _userRepository = UserRepository(prefs: prefs, client: client),
         _storyRepository = StoryRepository(client: client),
-        _trendingStoryRepository = TrendingStoryRepository(client: client) {
-    fetchUserData();
-  }
+        _trendingStoryRepository = TrendingStoryRepository(client: client);
 
-  Future<void> fetchUserData() async {
+  Future<void> fetchUserData(BuildContext context) async {
     _errorMessage = '';
     notifyListeners();
 
@@ -52,6 +50,13 @@ class ProfilePageViewModel extends ChangeNotifier {
       _errorMessage = 'No authentication token found. Please log in.';
       logger.d('No authentication token found.');
       notifyListeners();
+      if (context.mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LandingPage()),
+          (_) => false,
+        );
+      }
       return;
     }
 

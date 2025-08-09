@@ -72,14 +72,12 @@ class LoginPageViewModel extends ChangeNotifier {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
         final String token = responseData['token'];
         final String? role = responseData['role']; // Make role nullable
-        if (_rememberMe) {
-          await SharedPreferences.getInstance().then((prefs) {
-            prefs.setString('jwt_token', token);
-            if (role != null) {
-              prefs.setString('user_role', role); // Store user role only if not null
-            }
-          });
-        }
+        await SharedPreferences.getInstance().then((prefs) {
+          prefs.setString('jwt_token', token);
+          if (role != null) {
+            prefs.setString('user_role', role); // Store user role only if not null
+          }
+        });
         
 
         if (context.mounted) {
@@ -129,14 +127,12 @@ class LoginPageViewModel extends ChangeNotifier {
             final Map<String, dynamic> responseData = jsonDecode(response.body);
             final String token = responseData['token'];
             final String? role = responseData['role']; // Make role nullable
-            if (_rememberMe) {
-              await SharedPreferences.getInstance().then((prefs) {
-                prefs.setString('jwt_token', token);
-                if (role != null) {
-                  prefs.setString('user_role', role); // Store user role only if not null
-                }
-              });
-            }
+            await SharedPreferences.getInstance().then((prefs) {
+              prefs.setString('jwt_token', token);
+              if (role != null) {
+                prefs.setString('user_role', role); // Store user role only if not null
+              }
+            });
             print('Successfully received JWT from backend. Navigating to home.');
 
             if (context.mounted) {
