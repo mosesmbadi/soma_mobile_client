@@ -37,9 +37,9 @@ Future<void> main() async { // Make main async
 }
 
 class MyApp extends StatelessWidget {
-  final Widget defaultHome; // New field
+  final Widget defaultHome;
 
-  const MyApp({super.key, required this.defaultHome}); // New constructor
+  const MyApp({super.key, required this.defaultHome});
 
   @override
   Widget build(BuildContext context) {

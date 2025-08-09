@@ -12,7 +12,7 @@ class LoginPageViewModel extends ChangeNotifier {
   final TextEditingController _passwordController = TextEditingController();
   String _errorMessage = '';
   bool _isPasswordVisible = false;
-  bool _rememberMe = false; // New field
+  bool _rememberMe = false;
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     // This should be the google's Client ID for Web application (not the one for android)
@@ -24,7 +24,7 @@ class LoginPageViewModel extends ChangeNotifier {
   TextEditingController get passwordController => _passwordController;
   String get errorMessage => _errorMessage;
   bool get isPasswordVisible => _isPasswordVisible;
-  bool get rememberMe => _rememberMe; // New getter
+  bool get rememberMe => _rememberMe;
 
   @override
   void dispose() {

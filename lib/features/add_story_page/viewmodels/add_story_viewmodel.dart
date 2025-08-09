@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Import for Clipboard
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
@@ -9,7 +10,7 @@ import 'package:soma/core/services/image_upload_service.dart';
 import '../../../core/config/environment.dart';
 
 const String apiUrl = '${Environment.backendUrl}/api/stories';
-const String tagsApiUrl = '${Environment.backendUrl}/api/stories/tags'; // New
+const String tagsApiUrl = '${Environment.backendUrl}/api/stories/tags';
 
 class AddStoryViewModel extends ChangeNotifier {
   final QuillController _controller = QuillController.basic();
@@ -22,9 +23,12 @@ class AddStoryViewModel extends ChangeNotifier {
 
   String? _thumbnailUrl;
 
-  List<dynamic> _availableTags = []; // New
-  List<String> _selectedTagIds = []; // New
-  String _tagsErrorMessage = ''; // New
+  List<dynamic> _availableTags = [];
+  List<String> _selectedTagIds = [];
+  String _tagsErrorMessage = '';
+
+  String? _publishedStoryUrl;
+  bool _showShareOptions = false;
 
   // Getters
   QuillController get controller => _controller;
@@ -34,9 +38,12 @@ class AddStoryViewModel extends ChangeNotifier {
   FocusNode get focusNode => _focusNode;
   ScrollController get scrollController => _scrollController;
   String? get thumbnailUrl => _thumbnailUrl;
-  List<dynamic> get availableTags => _availableTags; // New
-  List<String> get selectedTagIds => _selectedTagIds; // New
-  String get tagsErrorMessage => _tagsErrorMessage; // New
+  List<dynamic> get availableTags => _availableTags;
+  List<String> get selectedTagIds => _selectedTagIds;
+  String get tagsErrorMessage => _tagsErrorMessage;
+
+  String? get publishedStoryUrl => _publishedStoryUrl;
+  bool get showShareOptions => _showShareOptions;
 
   final http.Client _httpClient;
   final SharedPreferences _sharedPreferences; // Make it final
@@ -55,6 +62,17 @@ class AddStoryViewModel extends ChangeNotifier {
     _focusNode.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void displayShareOptions() { // Renamed method
+    _showShareOptions = true;
+    notifyListeners();
+  }
+
+  void hideShareOptions() {
+    _showShareOptions = false;
+    _publishedStoryUrl = null; // Clear URL when hiding
+    notifyListeners();
   }
 
   Future<void> _fetchTags() async {
@@ -217,20 +235,23 @@ class AddStoryViewModel extends ChangeNotifier {
           'title': title,
           'content': contentToSend,
           'thumbnailUrl': thumbnailUrl,
-          'tags': _selectedTagIds, // New
+          'tags': _selectedTagIds, 
         }),
       );
 
       if (response.statusCode == 201) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        _publishedStoryUrl = responseData['storyUrl']; // Assuming backend returns 'storyUrl'
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Story published successfully!')),
         );
         _titleController.clear();
         _controller.clear();
-        _selectedTagIds.clear(); // New
+        _selectedTagIds.clear();
         await _sharedPreferences.remove('draft_story_title');
         await _sharedPreferences.remove('draft_story_content');
+        displayShareOptions(); // Show share options after success
       } else {
         final Map<String, dynamic> errorData = jsonDecode(response.body);
         _errorMessage = errorData['message'] ?? 'Failed to publish story.';
