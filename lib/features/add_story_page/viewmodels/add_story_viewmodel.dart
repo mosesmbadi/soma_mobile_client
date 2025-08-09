@@ -38,7 +38,7 @@ class AddStoryViewModel extends ChangeNotifier {
   List<String> get selectedTagIds => _selectedTagIds; // New
   String get tagsErrorMessage => _tagsErrorMessage; // New
 
-  AddStoryViewModel() {
+  AddStoryViewModel({http.Client? httpClient, SharedPreferences? sharedPreferences}) {
     _loadSavedStory();
     _fetchTags(); // New
   }

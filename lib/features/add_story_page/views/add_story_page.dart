@@ -9,8 +9,9 @@ class AddStoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('Building AddStoryPage');
     return ChangeNotifierProvider(
-      create: (_) => AddStoryViewModel(),
+      create: (_) => AddStoryViewModel(httpClient: null, sharedPreferences: null),
       child: Consumer<AddStoryViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(
