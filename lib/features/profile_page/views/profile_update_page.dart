@@ -69,7 +69,7 @@ class ProfileUpdatePage extends StatelessWidget {
                         const SizedBox(height: 16.0),
                         Center(
                           child: ElevatedButton(
-                            onPressed: viewModel.updateProfile,
+                            onPressed: () => viewModel.updateProfile(context),
                             child: const Text('Save Changes'),
                           ),
                         ),

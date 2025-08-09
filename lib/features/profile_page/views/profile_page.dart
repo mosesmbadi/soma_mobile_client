@@ -77,7 +77,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                                 child: InkWell(
                                   onTap: () {
-                                    viewModel.pickAndUploadBannerPhoto();
+                                    viewModel.pickAndUploadBannerPhoto(context);
                                   },
                                   child: (viewModel.userData!['bannerPhotoUrl'] != null && viewModel.userData!['bannerPhotoUrl'] != 'default-banner.png')
                                       ? Image.network(
@@ -161,7 +161,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                                 child: InkWell(
                                   onTap: () {
-                                    viewModel.pickAndUploadProfilePhoto();
+                                    viewModel.pickAndUploadProfilePhoto(context);
                                   },
                                   child: CircleAvatar(
                                     radius: profileImageRadius,

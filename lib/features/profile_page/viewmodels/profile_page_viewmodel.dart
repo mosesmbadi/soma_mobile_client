@@ -10,10 +10,10 @@ import 'package:soma/data/story_repository.dart';
 import 'package:soma/data/trending_story_repository.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:soma/core/widgets/show_toast.dart';
 import 'dart:io';
 
 const String apiUrl = '${Environment.backendUrl}/api/auth/me';
-
 final Logger logger = Logger();
 
 class ProfilePageViewModel extends ChangeNotifier {
@@ -58,7 +58,7 @@ class ProfilePageViewModel extends ChangeNotifier {
     try {
       final response = await http.get(
         Uri.parse(apiUrl),
-        headers: <String, String>{
+        headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -66,33 +66,27 @@ class ProfilePageViewModel extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         _userData = jsonDecode(response.body) as Map<String, dynamic>;
-        // Store user role in SharedPreferences
+
         if (_userData!['role'] != null) {
           _prefs.setString('user_role', _userData!['role']);
         }
+
         logger.d('User data fetched successfully: $_userData');
+
         if (_userData!['role'] == 'reader') {
-          logger.d('User is a reader. Fetching recent reads.');
           await _fetchRecentReads(token);
-          if (_recentReads.isEmpty) {
-            logger.d('No recent reads found. Fetching trending stories.');
-            await _fetchTrendingStories();
-          }
+          if (_recentReads.isEmpty) await _fetchTrendingStories();
         } else if (_userData!['role'] == 'writer') {
-          logger.d('User is a writer. Fetching my stories.');
           await _fetchMyStories(token);
-          if (_myStories.isEmpty) {
-            logger.d('No stories found. Fetching trending stories.');
-            await _fetchTrendingStories();
-          }
+          if (_myStories.isEmpty) await _fetchTrendingStories();
         }
       } else {
         _errorMessage = 'Failed to load user data: ${response.statusCode}';
-        logger.e('Failed to load user data: ${response.statusCode}');
+        logger.e(_errorMessage);
       }
     } catch (e) {
       _errorMessage = 'An error occurred: $e';
-      logger.e('An error occurred while fetching user data: $e');
+      logger.e(_errorMessage);
     } finally {
       notifyListeners();
     }
@@ -101,30 +95,30 @@ class ProfilePageViewModel extends ChangeNotifier {
   Future<void> _fetchRecentReads(String token) async {
     try {
       _recentReads = await _userRepository.fetchRecentReads(token);
-      logger.d('Recent reads fetched successfully: $_recentReads');
+      logger.d('Recent reads fetched: $_recentReads');
     } catch (e) {
-      logger.e('Error fetching recent reads: $e');
       _errorMessage = 'Failed to load recent reads: $e';
+      logger.e(_errorMessage);
     }
   }
 
   Future<void> _fetchMyStories(String token) async {
     try {
       _myStories = await _storyRepository.fetchMyStories(token);
-      logger.d('My stories fetched successfully: $_myStories');
+      logger.d('My stories fetched: $_myStories');
     } catch (e) {
-      logger.e('Error fetching my stories: $e');
       _errorMessage = 'Failed to load my stories: $e';
+      logger.e(_errorMessage);
     }
   }
 
   Future<void> _fetchTrendingStories() async {
     try {
       _trendingStories = await _trendingStoryRepository.fetchTrendingStories();
-      logger.d('Trending stories fetched successfully: $_trendingStories');
+      logger.d('Trending stories fetched: $_trendingStories');
     } catch (e) {
-      logger.e('Error fetching trending stories: $e');
       _errorMessage = 'Failed to load trending stories: $e';
+      logger.e(_errorMessage);
     }
   }
 
@@ -135,7 +129,7 @@ class ProfilePageViewModel extends ChangeNotifier {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const LandingPage()),
-        (Route<dynamic> route) => false,
+        (_) => false,
       );
     }
   }
@@ -143,60 +137,34 @@ class ProfilePageViewModel extends ChangeNotifier {
   void showTopUpDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Top Up Account'),
-          content: const Text('Top Up functionality will be implemented here.'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Close'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
+      builder: (_) => const AlertDialog(
+        title: Text('Top Up Account'),
+        content: Text('Top Up functionality will be implemented here.'),
+      ),
     );
   }
 
   void showWithdrawDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Withdraw Funds'),
-          content: const Text(
-            'Withdraw functionality will be implemented here.',
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Close'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
+      builder: (_) => const AlertDialog(
+        title: Text('Withdraw Funds'),
+        content: Text('Withdraw functionality will be implemented here.'),
+      ),
     );
   }
 
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> pickAndUploadProfilePhoto() async {
+  Future<void> pickAndUploadProfilePhoto(BuildContext context) async {
     _errorMessage = '';
     notifyListeners();
 
     try {
-      // 1. Pick Image
-      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-      if (pickedFile == null) {
-        logger.d('User cancelled image picking.');
-        return; // User cancelled
-      }
+      final XFile? pickedFile =
+          await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile == null) return;
 
-      // 2. Crop Image (Optional but Recommended)
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: pickedFile.path,
         uiSettings: [
@@ -204,77 +172,63 @@ class ProfilePageViewModel extends ChangeNotifier {
             toolbarTitle: 'Crop Profile Photo',
             toolbarColor: Colors.deepPurple,
             toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: true,
-            aspectRatioPresets: [
-              CropAspectRatioPreset.square,
-            ],
+            aspectRatioPresets: [CropAspectRatioPreset.square],
           ),
           IOSUiSettings(
             title: 'Crop Profile Photo',
             aspectRatioLockEnabled: true,
-            aspectRatioLockDimensionSwapEnabled: true,
-            aspectRatioPresets: [
-              CropAspectRatioPreset.square,
-            ],
+            aspectRatioPresets: [CropAspectRatioPreset.square],
           ),
         ],
       );
 
-      if (croppedFile == null) {
-        logger.d('User cancelled image cropping.');
-        return; // User cancelled cropping
-      }
+      if (croppedFile == null) return;
 
-      // 3. Upload Image to Backend
       final String? token = _prefs.getString('jwt_token');
       if (token == null) {
-        _errorMessage = 'No authentication token found. Please log in.';
-        logger.e('Attempted to upload photo without token.');
-        notifyListeners();
+        showToast(context, 'Please log in.', isSuccess: false);
         return;
       }
 
       final File imageFile = File(croppedFile.path);
-      // Assuming your backend endpoint for profile photo upload is /api/users/profile/photo
-      final uri = Uri.parse('${Environment.backendUrl}/api/users/profile/photo');
-      final request = http.MultipartRequest('PUT', uri) // Or POST, depending on your backend
+      final request = http.MultipartRequest(
+        'PUT',
+        Uri.parse('${Environment.backendUrl}/api/users/profile/photo'),
+      )
         ..headers['Authorization'] = 'Bearer $token'
-        ..files.add(await http.MultipartFile.fromPath('profilePhoto', imageFile.path)); // 'profilePhoto' is the field name your backend expects
+        ..files.add(
+            await http.MultipartFile.fromPath('profilePhoto', imageFile.path));
 
-      logger.d('Uploading profile photo...');
       final response = await request.send();
 
       if (response.statusCode == 200) {
-        final responseBody = await response.stream.bytesToString();
-        final Map<String, dynamic> data = jsonDecode(responseBody);
-        // The backend now sends back the S3 URL, update local data
+        final body = await response.stream.bytesToString();
+        final data = jsonDecode(body);
         _userData?['profilePhotoUrl'] = data['profilePhotoUrl'];
-        logger.d('Profile photo uploaded successfully. New URL: ${_userData?['profilePhotoUrl']}');
-        _errorMessage = ''; // Clear any previous error messages
+        showToast(context, 'Profile photo updated!', isSuccess: true);
       } else {
-        final errorBody = await response.stream.bytesToString();
-        _errorMessage = 'Failed to upload photo: ${response.statusCode} - $errorBody';
-        logger.e('Failed to upload profile photo: ${response.statusCode} - $errorBody');
+        showToast(
+          context,
+          'Failed to upload photo (${response.statusCode})',
+          isSuccess: false,
+        );
       }
     } catch (e) {
-      _errorMessage = 'An error occurred during photo upload: $e';
-      logger.e('Exception during photo upload: $e');
+      showToast(context, 'Upload failed: $e', isSuccess: false);
     } finally {
-      notifyListeners(); // Notify listeners to update the UI
+      notifyListeners();
     }
   }
 
-  Future<void> pickAndUploadBannerPhoto() async {
+  Future<void> pickAndUploadBannerPhoto(BuildContext context) async {
     _errorMessage = '';
     notifyListeners();
 
     try {
-      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-      if (pickedFile == null) {
-        logger.d('User cancelled banner image picking.');
-        return;
-      }
+      final XFile? pickedFile =
+          await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile == null) return;
 
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: pickedFile.path,
@@ -283,59 +237,50 @@ class ProfilePageViewModel extends ChangeNotifier {
             toolbarTitle: 'Crop Banner Photo',
             toolbarColor: Colors.deepPurple,
             toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.ratio16x9,
             lockAspectRatio: true,
-            aspectRatioPresets: [
-              CropAspectRatioPreset.ratio16x9,
-            ],
+            aspectRatioPresets: [CropAspectRatioPreset.ratio16x9],
           ),
           IOSUiSettings(
             title: 'Crop Banner Photo',
             aspectRatioLockEnabled: true,
-            aspectRatioLockDimensionSwapEnabled: true,
-            aspectRatioPresets: [
-              CropAspectRatioPreset.ratio16x9,
-            ],
+            aspectRatioPresets: [CropAspectRatioPreset.ratio16x9],
           ),
         ],
       );
 
-      if (croppedFile == null) {
-        logger.d('User cancelled banner image cropping.');
-        return;
-      }
+      if (croppedFile == null) return;
 
       final String? token = _prefs.getString('jwt_token');
       if (token == null) {
-        _errorMessage = 'No authentication token found. Please log in.';
-        logger.e('Attempted to upload banner photo without token.');
-        notifyListeners();
+        showToast(context, 'Please log in.', isSuccess: false);
         return;
       }
 
       final File imageFile = File(croppedFile.path);
-      final uri = Uri.parse('${Environment.backendUrl}/api/users/banner/photo'); // New backend endpoint for banner
-      final request = http.MultipartRequest('PUT', uri)
+      final request = http.MultipartRequest(
+        'PUT',
+        Uri.parse('${Environment.backendUrl}/api/users/banner/photo'),
+      )
         ..headers['Authorization'] = 'Bearer $token'
-        ..files.add(await http.MultipartFile.fromPath('bannerPhoto', imageFile.path)); // 'bannerPhoto' is the field name your backend expects
+        ..files.add(
+            await http.MultipartFile.fromPath('bannerPhoto', imageFile.path));
 
-      logger.d('Uploading banner photo...');
       final response = await request.send();
 
       if (response.statusCode == 200) {
-        final responseBody = await response.stream.bytesToString();
-        final Map<String, dynamic> data = jsonDecode(responseBody);
-        _userData?['bannerPhotoUrl'] = data['bannerPhotoUrl']; // Update local data
-        logger.d('Banner photo uploaded successfully. New URL: ${_userData?['bannerPhotoUrl']}');
-        _errorMessage = '';
+        final body = await response.stream.bytesToString();
+        final data = jsonDecode(body);
+        _userData?['bannerPhotoUrl'] = data['bannerPhotoUrl'];
+        showToast(context, 'Banner photo updated!', isSuccess: true);
       } else {
-        final errorBody = await response.stream.bytesToString();
-        _errorMessage = 'Failed to upload banner photo: ${response.statusCode} - $errorBody';
-        logger.e('Failed to upload banner photo: ${response.statusCode} - $errorBody');
+        showToast(
+          context,
+          'Failed to upload banner (${response.statusCode})',
+          isSuccess: false,
+        );
       }
     } catch (e) {
-      _errorMessage = 'An error occurred during banner photo upload: $e';
-      logger.e('Exception during banner photo upload: $e');
+      showToast(context, 'Upload failed: $e', isSuccess: false);
     } finally {
       notifyListeners();
     }
@@ -348,52 +293,33 @@ class ProfilePageViewModel extends ChangeNotifier {
     final String? token = _prefs.getString('jwt_token');
 
     if (token == null) {
-      _errorMessage = 'No authentication token found. Please log in.';
-      logger.e('Attempted to request writer account without token.');
-      notifyListeners();
+      showToast(context, 'Please log in.', isSuccess: false);
       return;
     }
 
     try {
       final response = await http.post(
         Uri.parse('${Environment.backendUrl}/api/users/writer-request'),
-        headers: <String, String>{
+        headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',
         },
       );
 
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Writer account request sent successfully!'),
-            backgroundColor: const Color(0xFFCFFDBC), // Success color
-          ),
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        showToast(
+          context,
+          'Writer account request sent successfully!',
+          isSuccess: true,
         );
-        logger.d('Writer account request sent successfully.');
       } else {
-        final Map<String, dynamic> errorData = jsonDecode(response.body);
-        final String message = errorData['message'] ?? 'Failed to send writer account request.';
-        Color backgroundColor = Colors.red; // Default error color
-
-        if (message.contains('You already have a pending request')) {
-          backgroundColor = const Color(0xFFE2725B); // Specific error color
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: backgroundColor,
-          ),
-        );
-        logger.e('Failed to send writer account request: ${response.statusCode} - $message');
+        final data = jsonDecode(response.body);
+        final message =
+            data['message'] ?? 'Failed to send writer account request.';
+        showToast(context, message, isSuccess: false);
       }
     } catch (e) {
-      _errorMessage = 'An error occurred while requesting writer account: $e';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_errorMessage)),
-      );
-      logger.e('Exception during writer account request: $e');
+      showToast(context, 'Request failed: $e', isSuccess: false);
     } finally {
       notifyListeners();
     }
