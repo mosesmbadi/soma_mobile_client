@@ -305,7 +305,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: ElevatedButton(
                               onPressed: () => viewModel.requestWriterAccount(context),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blueAccent,
+                                backgroundColor: Color(0xFF333333),
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -315,7 +315,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 'Request Writer Account',
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: Colors.white,
+                                  color: Color(0xFFFFFFFF),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

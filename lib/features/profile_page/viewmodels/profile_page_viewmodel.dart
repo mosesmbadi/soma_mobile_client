@@ -365,16 +365,28 @@ class ProfilePageViewModel extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Writer account request sent successfully!')),
+          SnackBar(
+            content: const Text('Writer account request sent successfully!'),
+            backgroundColor: const Color(0xFFCFFDBC), // Success color
+          ),
         );
         logger.d('Writer account request sent successfully.');
       } else {
-        final errorBody = jsonDecode(response.body);
-        _errorMessage = errorBody['message'] ?? 'Failed to send writer account request.';
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        final String message = errorData['message'] ?? 'Failed to send writer account request.';
+        Color backgroundColor = Colors.red; // Default error color
+
+        if (message.contains('You already have a pending request')) {
+          backgroundColor = const Color(0xFFE2725B); // Specific error color
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_errorMessage)),
+          SnackBar(
+            content: Text(message),
+            backgroundColor: backgroundColor,
+          ),
         );
-        logger.e('Failed to send writer account request: ${response.statusCode} - $_errorMessage');
+        logger.e('Failed to send writer account request: ${response.statusCode} - $message');
       }
     } catch (e) {
       _errorMessage = 'An error occurred while requesting writer account: $e';
