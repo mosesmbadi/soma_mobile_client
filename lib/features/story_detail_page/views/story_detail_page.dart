@@ -194,9 +194,33 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'By $authorName',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  Row( // Wrap author and tags in a Row
+                    children: [
+                      Text(
+                        'By $authorName',
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      const SizedBox(width: 8), // Space between author and tags
+                      if (widget.story['tags'] != null && widget.story['tags'].isNotEmpty)
+                        Expanded( // Use Expanded to allow tags to wrap
+                          child: Wrap(
+                            spacing: 6.0,
+                            runSpacing: 0.0,
+                            children: (widget.story['tags'] as List<dynamic>).map((tag) {
+                              final Map<String, dynamic> tagMap = tag as Map<String, dynamic>;
+                              return Chip(
+                                label: Text(
+                                  tagMap['name'],
+                                  style: const TextStyle(fontSize: 10, color: Colors.white),
+                                ),
+                                backgroundColor: Colors.blueGrey,
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   if (thumbnailUrl != null && thumbnailUrl.isNotEmpty)

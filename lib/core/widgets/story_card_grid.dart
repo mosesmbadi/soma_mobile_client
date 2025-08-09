@@ -90,6 +90,27 @@ class StoryCardGrid extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: 6),
+                    // Display Tags
+                    if (story['tags'] != null && story['tags'].isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4.0),
+                        child: Wrap(
+                          spacing: 6.0,
+                          runSpacing: 0.0,
+                          children: (story['tags'] as List<dynamic>).map((tag) {
+                            final Map<String, dynamic> tagMap = tag as Map<String, dynamic>;
+                            return Chip(
+                              label: Text(
+                                tagMap['name'],
+                                style: const TextStyle(fontSize: 10, color: Colors.white),
+                              ),
+                              backgroundColor: Colors.blueGrey.withOpacity(0.7),
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     Row(
                       children: [
                         Expanded(
