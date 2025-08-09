@@ -62,7 +62,13 @@ class BottomNavShell extends StatelessWidget {
                           currentIndex: viewModel.selectedIndex,
                           selectedItemColor: Colors.blueAccent,
                           unselectedItemColor: Colors.grey,
-                          onTap: viewModel.onItemTapped,
+                          onTap: (index) {
+                            if (index == 2) { // Index for Add Story
+                              Navigator.pushNamed(context, '/add_story');
+                            } else {
+                              viewModel.onItemTapped(index);
+                            }
+                          },
                           type: BottomNavigationBarType.fixed,
                           backgroundColor: Colors.transparent,
                           elevation: 0,
@@ -87,8 +93,7 @@ class BottomNavShell extends StatelessWidget {
         return const HomePage();
       case 1:
         return const MyStoriesPage();
-      case 2:
-        return const AddStoryPage();
+      
       case 3:
         return const ProfilePage();
       default:

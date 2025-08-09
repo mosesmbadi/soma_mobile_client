@@ -40,24 +40,27 @@ class UserRepository {
   }
 
 
-  Future<bool> requestWriterAccess(String token) async {
-    final String writerRequestApiUrl =
-        '${Environment.backendUrl}/api/users/writer-request';
-    try {
-      final response = await _client.post(
-        Uri.parse(writerRequestApiUrl),
-        headers: <String, String>{
-          'Authorization': 'Bearer $token',
-          'User-Agent': 'soma_mobile_client',
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-      );
-      return response.statusCode == 200;
-    } catch (e) {
-      return false;
-    }
+Future<bool> requestWriterAccess(String token) async {
+  try {
+    final uri = Uri.parse(
+      '${Environment.backendUrl}/api/users/writer-request',
+    );
+    final response = await _client.post(
+      uri,
+      headers: <String, String>{
+        'Authorization': 'Bearer $token',
+        'User-Agent': 'soma_mobile_client',
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    );
+    return response.statusCode == 200;
+  } catch (e) {
+    // Log the error to understand what's happening
+    print('Error making writer access request: $e');
+    return false;
   }
-  
+}
+
   Future<List<dynamic>> fetchRecentReads(String token) async {
     final String _unlockedStoriesApiUrl =
         '${Environment.backendUrl}/api/stories/user/unlocked';

@@ -318,11 +318,10 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               _buildCustomActionButton(
                                 icon: Icons.upload,
-                                label:
-                                    'Top up', // This label seems incorrect, should it be 'Upload Story'?
-                                onPressed: () => viewModel.showTopUpDialog(
-                                  context,
-                                ), // This onPressed seems incorrect
+                                label: 'Upload Story',
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/add_story');
+                                },
                                 backgroundColor: const Color(0xFFE0B0FF),
                                 iconColor: const Color(0xD1E4FFFF),
                               ),
