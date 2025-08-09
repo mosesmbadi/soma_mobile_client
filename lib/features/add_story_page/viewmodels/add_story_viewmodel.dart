@@ -242,10 +242,7 @@ class AddStoryViewModel extends ChangeNotifier {
       if (response.statusCode == 201) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
         _publishedStoryUrl = responseData['storyUrl']; // Assuming backend returns 'storyUrl'
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Story published successfully!')),
-        );
+        
         _titleController.clear();
         _controller.clear();
         _selectedTagIds.clear();
