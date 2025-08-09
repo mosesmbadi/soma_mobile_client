@@ -9,6 +9,7 @@ import 'package:soma/core/services/image_upload_service.dart';
 import '../../../core/config/environment.dart';
 
 const String apiUrl = '${Environment.backendUrl}/api/stories';
+const String tagsApiUrl = '${Environment.backendUrl}/api/stories/tags'; // New
 
 class AddStoryViewModel extends ChangeNotifier {
   final QuillController _controller = QuillController.basic();
@@ -21,6 +22,10 @@ class AddStoryViewModel extends ChangeNotifier {
 
   String? _thumbnailUrl;
 
+  List<dynamic> _availableTags = []; // New
+  List<String> _selectedTagIds = []; // New
+  String _tagsErrorMessage = ''; // New
+
   // Getters
   QuillController get controller => _controller;
   TextEditingController get titleController => _titleController;
@@ -29,9 +34,13 @@ class AddStoryViewModel extends ChangeNotifier {
   FocusNode get focusNode => _focusNode;
   ScrollController get scrollController => _scrollController;
   String? get thumbnailUrl => _thumbnailUrl;
+  List<dynamic> get availableTags => _availableTags; // New
+  List<String> get selectedTagIds => _selectedTagIds; // New
+  String get tagsErrorMessage => _tagsErrorMessage; // New
 
   AddStoryViewModel() {
     _loadSavedStory();
+    _fetchTags(); // New
   }
 
   @override
@@ -41,6 +50,57 @@ class AddStoryViewModel extends ChangeNotifier {
     _focusNode.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchTags() async {
+    _isLoading = true;
+    _tagsErrorMessage = '';
+    notifyListeners();
+
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        _tagsErrorMessage = 'Authentication token not found. Cannot fetch tags.';
+        _isLoading = false;
+        notifyListeners();
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse(tagsApiUrl),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _availableTags = jsonDecode(response.body);
+      } else {
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        _tagsErrorMessage = errorData['message'] ?? 'Failed to fetch tags.';
+      }
+    } catch (e) {
+      _tagsErrorMessage = 'An error occurred while fetching tags: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void toggleTagSelection(String tagId) {
+    if (_selectedTagIds.contains(tagId)) {
+      _selectedTagIds.remove(tagId);
+    } else {
+      if (_selectedTagIds.length < 3) {
+        _selectedTagIds.add(tagId);
+      } else {
+        _tagsErrorMessage = 'You can select a maximum of 3 tags.';
+      }
+    }
+    notifyListeners();
   }
 
   Future<void> _loadSavedStory() async {
@@ -98,6 +158,13 @@ class AddStoryViewModel extends ChangeNotifier {
       return;
     }
 
+    if (_selectedTagIds.isEmpty || _selectedTagIds.length > 3) {
+      _errorMessage = 'Please select between 1 and 3 tags.';
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String? token = prefs.getString('jwt_token');
 
@@ -107,8 +174,6 @@ class AddStoryViewModel extends ChangeNotifier {
       notifyListeners();
       return;
     }
-
-    
     
     List<Map<String, dynamic>> docOperations = _controller.document.toDelta().toJson();
     List<Map<String, dynamic>> modifiedDocOperations = [];
@@ -142,6 +207,7 @@ class AddStoryViewModel extends ChangeNotifier {
           'title': title,
           'content': contentToSend,
           'thumbnailUrl': thumbnailUrl,
+          'tags': _selectedTagIds, // New
         }),
       );
 
@@ -152,6 +218,7 @@ class AddStoryViewModel extends ChangeNotifier {
         );
         _titleController.clear();
         _controller.clear();
+        _selectedTagIds.clear(); // New
         await prefs.remove('draft_story_title');
         await prefs.remove('draft_story_content');
       } else {
