@@ -42,7 +42,7 @@ class MyStoriesPage extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  StoryDetailPage(story: story),
+                                  StoryDetailPage(storyId: story['_id']),
                             ),
                           );
                         },

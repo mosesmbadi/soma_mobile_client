@@ -64,7 +64,7 @@ class HomePage extends StatelessWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    StoryDetailPage(story: story),
+                                    StoryDetailPage(storyId: story['_id']),
                               ),
                             );
                           },
@@ -96,7 +96,7 @@ class HomePage extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  StoryDetailPage(story: story),
+                                  StoryDetailPage(storyId: story['_id']),
                             ),
                           );
                         },

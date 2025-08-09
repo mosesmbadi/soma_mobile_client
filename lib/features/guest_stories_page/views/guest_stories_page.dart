@@ -37,7 +37,7 @@ class GuestStoriesPage extends StatelessWidget {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => StoryDetailPage(story: story),
+                                      builder: (context) => StoryDetailPage(storyId: story['_id']),
                                     ),
                                   );
                                 },

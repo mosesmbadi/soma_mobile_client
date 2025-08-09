@@ -10,6 +10,7 @@ import 'package:soma/core/widgets/bottom_nav.dart';
 import 'package:soma/features/registration_page/views/registration_page.dart';
 import 'package:soma/features/profile_page/views/profile_update_page.dart';
 import 'package:soma/core/widgets/splash_screen.dart';
+import 'package:soma/features/story_detail_page/views/story_detail_page.dart'; // New import
 
 void main() {
   runApp(const MyApp());
@@ -48,6 +49,14 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => const ProfilePage(),
         '/register': (context) => const RegistrationPage(),
         '/profile_update': (context) => const ProfileUpdatePage(),
+        '/story_detail': (context) { // New route for story detail
+          final String? storyId = ModalRoute.of(context)?.settings.arguments as String?;
+          if (storyId == null) {
+            // Handle the case where storyId is not provided, e.g., navigate to home or show an error
+            return const Text('Error: Story ID not provided'); // Or a more robust error page
+          }
+          return StoryDetailPage(storyId: storyId);
+        },
       },
     );
   }

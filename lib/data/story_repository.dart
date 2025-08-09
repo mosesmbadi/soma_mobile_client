@@ -118,4 +118,24 @@ class StoryRepository {
       throw Exception('Error unlocking story: $e');
     }
   }
+
+  Future<Map<String, dynamic>> fetchStoryById(String storyId, String token) async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$_storiesApiUrl/$storyId'),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load story with ID $storyId: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('An error occurred while fetching story with ID $storyId: $e');
+    }
+  }
 }

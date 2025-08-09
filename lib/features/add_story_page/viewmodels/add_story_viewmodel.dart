@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soma/core/services/image_upload_service.dart';
+import 'package:soma/core/widgets/show_toast.dart';
 import '../../../core/config/environment.dart';
 
 const String apiUrl = '${Environment.backendUrl}/api/stories';
@@ -147,16 +148,25 @@ class AddStoryViewModel extends ChangeNotifier {
 
       if (response.statusCode == 201) {
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Story published successfully!')),
-        );
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        final String storyId = responseData['_id']; // Assuming the response contains the story ID
+
+        showToast(context, 'Story published successfully!', isSuccess: true);
         _titleController.clear();
         _controller.clear();
         await prefs.remove('draft_story_title');
         await prefs.remove('draft_story_content');
+
+        // Redirect to story details page
+        Navigator.pushReplacementNamed(
+          context,
+          '/story_detail',
+          arguments: storyId, // Pass the story ID as an argument
+        );
       } else {
         final Map<String, dynamic> errorData = jsonDecode(response.body);
         _errorMessage = errorData['message'] ?? 'Failed to publish story.';
+        showToast(context, _errorMessage, isSuccess: false); // Show error toast
       }
     } catch (e) {
       _errorMessage = 'An error occurred: $e';

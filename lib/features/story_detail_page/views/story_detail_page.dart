@@ -12,9 +12,9 @@ import 'package:soma/data/user_repository.dart';
 import 'package:http/http.dart' as http;
 
 class StoryDetailPage extends StatefulWidget {
-  final Map<String, dynamic> story;
+  final String storyId;
 
-  const StoryDetailPage({super.key, required this.story});
+  const StoryDetailPage({super.key, required this.storyId});
 
   @override
   State<StoryDetailPage> createState() => _StoryDetailPageState();
@@ -26,10 +26,12 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
   late final SharedPreferences _prefs;
   late final http.Client _httpClient;
 
+  Map<String, dynamic>? _storyData; // New field to store fetched story data
   String? _currentUserId;
   bool _isStoryUnlocked = false;
   int _currentUserTokens = 0;
   bool _isUnlocking = false;
+  bool _isLoading = true; // New field for loading state
 
   @override
   void initState() {
@@ -42,10 +44,37 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     _prefs = await SharedPreferences.getInstance();
     _userRepository = UserRepository(prefs: _prefs, client: _httpClient);
     _storyRepository = StoryRepository(client: _httpClient);
+    await _fetchStoryDetails(); // Fetch story details first
     _initializeData();
   }
 
+  Future<void> _fetchStoryDetails() async {
+    try {
+      final String? token = _prefs.getString('jwt_token');
+      if (token == null) {
+        print('Error: No authentication token found for fetching story details.');
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+      final fetchedStory = await _storyRepository.fetchStoryById(widget.storyId, token);
+      setState(() {
+        _storyData = fetchedStory;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching story details: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   Future<void> _initializeData() async {
+    if (_storyData == null) { // Only proceed if story data was fetched successfully
+      return;
+    }
     final String? token = _prefs.getString('jwt_token');
     if (token == null) {
       print('Error: No authentication token found.');
@@ -68,9 +97,10 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
   }
 
   Future<void> _checkStoryUnlockStatus(String token) async {
+    if (_storyData == null) return; // Ensure story data is available
     try {
       final unlocked = await _storyRepository.isStoryUnlocked(
-        widget.story['_id'],
+        _storyData!['_id'], // Use _storyData
         token,
       );
       setState(() {
@@ -117,7 +147,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
       return;
     }
 
-    final String storyId = widget.story['_id'];
+    final String storyId = _storyData!['_id']; // Use _storyData
     try {
       await _storyRepository.unlockStory(storyId, token);
       _showSnackBar(
@@ -144,24 +174,32 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final String storySlug = widget.story['slug'] ?? '';
-    final int estimatedTime = widget.story['estimatedTime'] ?? 30;
-    final bool isPremium = widget.story['is_premium'] == true;
+    if (_isLoading || _storyData == null) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    final String storySlug = _storyData!['slug'] ?? '';
+    final int estimatedTime = _storyData!['estimatedTime'] ?? 30;
+    final bool isPremium = _storyData!['is_premium'] == true;
     final bool isMyStory =
         _currentUserId != null &&
-        widget.story['author']?['_id'] == _currentUserId;
+        _storyData!['author']?['_id'] == _currentUserId;
 
     return ChangeNotifierProvider(
       create: (_) =>
-          StoryDetailViewModel(storySlug, widget.story['_id'], estimatedTime),
+          StoryDetailViewModel(storySlug, _storyData!['_id'], estimatedTime),
       child: Consumer<StoryDetailViewModel>(
         builder: (context, viewModel, child) {
-          final String title = widget.story['title'] ?? 'No Title';
+          final String title = _storyData!['title'] ?? 'No Title';
           final String authorName =
-              widget.story['author']?['name'] ?? 'Unknown Author';
-          final String? thumbnailUrl = widget.story['thumbnailUrl'];
+              _storyData!['author']?['name'] ?? 'Unknown Author';
+          final String? thumbnailUrl = _storyData!['thumbnailUrl'];
 
-          final contentJson = jsonDecode(widget.story['content'] ?? '[]');
+          final contentJson = jsonDecode(_storyData!['content'] ?? '[]');
           final document = Document.fromJson(contentJson);
 
           // Ensure the document ends with a newline, as required by flutter_quill
