@@ -13,7 +13,7 @@ class ImageUploadService {
       throw Exception('Authentication token not found.');
     }
 
-    final uri = Uri.parse('${Environment.backendUrl}/api/upload');
+    final uri = Uri.parse('${Environment.backendUrl}/api/upload/thumbnail');
     final request = http.MultipartRequest('POST', uri)
       ..headers['Authorization'] = 'Bearer $token'
       ..files.add(await http.MultipartFile.fromPath('image', imageFile.path));
