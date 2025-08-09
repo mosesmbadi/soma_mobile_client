@@ -25,7 +25,10 @@ class HomePageViewModel extends ChangeNotifier {
     fetchStories();
   }
 
-  void onItemTapped(int index, BuildContext context) {
+  void onItemTapped(int index, BuildContext context) async { // Added async
+    final SharedPreferences prefs = await SharedPreferences.getInstance(); // Fetch prefs
+    _userRole = prefs.getString('user_role'); // Update _userRole
+
     if (index == 2 && _userRole == 'reader') {
       showToast(context, 'Readers cannot upload stories. Please request a writer account.', isSuccess: false);
       return;
