@@ -4,6 +4,7 @@ import 'package:soma/features/profile_page/viewmodels/profile_page_viewmodel.dar
 import 'package:soma/features/profile_page/views/profile_update_page.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -94,7 +95,11 @@ class _ProfilePageState extends State<ProfilePage> {
                               top: 10,
                               right: 10,
                               child: IconButton(
-                                icon: const Icon(Icons.settings, color: Colors.white, size: 30),
+                                icon: const Icon(
+                                  Icons.settings,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
                                 onPressed: () {
                                   showModalBottomSheet(
                                     context: context,
@@ -104,19 +109,34 @@ class _ProfilePageState extends State<ProfilePage> {
                                           children: <Widget>[
                                             ListTile(
                                               leading: const Icon(Icons.edit),
-                                              title: const Text('Update Profile'),
+                                              title: const Text(
+                                                'Update Profile',
+                                              ),
                                               onTap: () async {
-                                                Navigator.pop(bc); // Close the bottom sheet
-                                                await Navigator.pushNamed(context, '/profile_update');
-                                                Provider.of<ProfilePageViewModel>(context, listen: false).fetchUserData();
+                                                Navigator.pop(
+                                                  bc,
+                                                ); // Close the bottom sheet
+                                                await Navigator.pushNamed(
+                                                  context,
+                                                  '/profile_update',
+                                                );
+                                                Provider.of<
+                                                      ProfilePageViewModel
+                                                    >(context, listen: false)
+                                                    .fetchUserData();
                                               },
                                             ),
                                             ListTile(
                                               leading: const Icon(Icons.logout),
                                               title: const Text('Logout'),
                                               onTap: () {
-                                                Navigator.pop(bc); // Close the bottom sheet
-                                                Provider.of<ProfilePageViewModel>(context, listen: false).logout(context);
+                                                Navigator.pop(
+                                                  bc,
+                                                ); // Close the bottom sheet
+                                                Provider.of<
+                                                      ProfilePageViewModel
+                                                    >(context, listen: false)
+                                                    .logout(context);
                                               },
                                             ),
                                           ],
@@ -143,9 +163,19 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                                 child: CircleAvatar(
                                   radius: profileImageRadius,
-                                  backgroundImage: (viewModel.userData!['profilePicture'] != null && viewModel.userData!['profilePicture'] != 'default-profile.png')
-                                      ? NetworkImage(viewModel.userData!['profilePicture'])
-                                      : const NetworkImage('https://images.pexels.com/photos/2975709/pexels-photo-2975709.jpeg') as ImageProvider, // Placeholder
+                                  backgroundImage:
+                                      (viewModel.userData!['profilePicture'] !=
+                                              null &&
+                                          viewModel
+                                                  .userData!['profilePicture'] !=
+                                              'default-profile.png')
+                                      ? NetworkImage(
+                                          viewModel.userData!['profilePicture'],
+                                        )
+                                      : const NetworkImage(
+                                              'https://images.pexels.com/photos/2975709/pexels-photo-2975709.jpeg',
+                                            )
+                                            as ImageProvider, // Placeholder
                                   backgroundColor: Colors.grey.shade200,
                                 ),
                               ),
@@ -154,14 +184,53 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         const SizedBox(height: profileImageRadius + 10),
                         // User Name
-                        Text(
-                          viewModel.userData!['name'] ?? 'George Mukabi',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Text(
+                                  viewModel.userData!['name'] ??
+                                      'George Mukabi',
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Positioned(
+                                  top:
+                                      -5, // Adjust this value to control vertical position
+                                  right:
+                                      -50, // Adjust this value to control horizontal position
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors
+                                          .blue
+                                          .shade100, // Background color
+                                      borderRadius: BorderRadius.circular(
+                                        12,
+                                      ), // Border radius
+                                    ),
+                                    child: Text(
+                                      viewModel.userData!['role'],
+                                      style: const TextStyle(
+                                        fontSize: 12, // Smaller font size
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue, // Text color
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
+
                         const SizedBox(height: 8),
                         // User Stats
                         Row(
@@ -249,9 +318,11 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               _buildCustomActionButton(
                                 icon: Icons.upload,
-                                label: 'Top up', // This label seems incorrect, should it be 'Upload Story'?
-                                onPressed: () =>
-                                    viewModel.showTopUpDialog(context), // This onPressed seems incorrect
+                                label:
+                                    'Top up', // This label seems incorrect, should it be 'Upload Story'?
+                                onPressed: () => viewModel.showTopUpDialog(
+                                  context,
+                                ), // This onPressed seems incorrect
                                 backgroundColor: const Color(0xFFE0B0FF),
                                 iconColor: const Color(0xD1E4FFFF),
                               ),
@@ -266,6 +337,33 @@ class _ProfilePageState extends State<ProfilePage> {
                             ],
                           ),
                         ),
+
+                        // Show request writer access button for 'reader' role
+                        if (viewModel.userData!['role'] == 'reader')
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 90.0,
+                              vertical: 10.0,
+                            ),
+                            child: ElevatedButton.icon(
+                              label: const Text('Request Writer Access'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFF333333),
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () async {
+                                final success = await viewModel
+                                    .requestWriterAccess();
+                                final message = success
+                                    ? 'Request sent successfully!'
+                                    : 'Failed to send request.';
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(message)),
+                                );
+                              },
+                            ),
+                          ),
+
                         const SizedBox(height: 10),
                         // Recent Reads / My Stories / Trending Stories Section
                         Padding(
@@ -275,8 +373,12 @@ class _ProfilePageState extends State<ProfilePage> {
                             children: [
                               Text(
                                 viewModel.userData!['role'] == 'reader'
-                                    ? (viewModel.recentReads.isNotEmpty ? 'Recent Reads' : 'Trending Stories')
-                                    : (viewModel.myStories.isNotEmpty ? 'My Stories' : 'Trending Stories'),
+                                    ? (viewModel.recentReads.isNotEmpty
+                                          ? 'Recent Reads'
+                                          : 'Trending Stories')
+                                    : (viewModel.myStories.isNotEmpty
+                                          ? 'My Stories'
+                                          : 'Trending Stories'),
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -316,87 +418,148 @@ class _ProfilePageState extends State<ProfilePage> {
                             if (viewModel.userData!['role'] == 'reader') {
                               return (viewModel.recentReads.isNotEmpty)
                                   ? Column(
-                                      children: viewModel.recentReads.map((story) {
-                                        if (story is Map<String, dynamic>) {
-                                          return _buildRecentReadItem(
-                                            title: story['title'] ?? 'No Title',
-                                            author: (story['author'] is Map<String, dynamic>)
-                                                ? story['author']['name'] ?? 'Unknown Author'
-                                                : (story['author'] is String)
-                                                    ? story['author']
-                                                    : 'Unknown Author',
-                                            date: story['createdAt'] != null
-                                                ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
-                                                : '',
-                                          );
-                                        } else {
-                                          return const SizedBox.shrink(); // Or a placeholder widget
-                                        }
-                                      }).toList().cast<Widget>(),
-                                    )
-                                  : (viewModel.trendingStories.isNotEmpty)
-                                      ? Column(
-                                          children: viewModel.trendingStories.map((story) {
+                                      children: viewModel.recentReads
+                                          .map((story) {
                                             if (story is Map<String, dynamic>) {
                                               return _buildRecentReadItem(
-                                                title: story['title'] ?? 'No Title',
-                                                author: (story['author'] is Map<String, dynamic>)
-                                                ? story['author']['name'] ?? 'Unknown Author'
-                                                : (story['author'] is String)
+                                                title:
+                                                    story['title'] ??
+                                                    'No Title',
+                                                author:
+                                                    (story['author']
+                                                        is Map<String, dynamic>)
+                                                    ? story['author']['name'] ??
+                                                          'Unknown Author'
+                                                    : (story['author']
+                                                          is String)
                                                     ? story['author']
                                                     : 'Unknown Author',
                                                 date: story['createdAt'] != null
-                                                    ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
+                                                    ? DateFormat(
+                                                        'MMM d, yyyy',
+                                                      ).format(
+                                                        DateTime.parse(
+                                                          story['createdAt'],
+                                                        ),
+                                                      )
                                                     : '',
                                               );
                                             } else {
                                               return const SizedBox.shrink(); // Or a placeholder widget
                                             }
-                                          }).toList().cast<Widget>(),
-                                        )
-                                      : const SizedBox.shrink();
-                            } else if (viewModel.userData!['role'] == 'writer') {
+                                          })
+                                          .toList()
+                                          .cast<Widget>(),
+                                    )
+                                  : (viewModel.trendingStories.isNotEmpty)
+                                  ? Column(
+                                      children: viewModel.trendingStories
+                                          .map((story) {
+                                            if (story is Map<String, dynamic>) {
+                                              return _buildRecentReadItem(
+                                                title:
+                                                    story['title'] ??
+                                                    'No Title',
+                                                author:
+                                                    (story['author']
+                                                        is Map<String, dynamic>)
+                                                    ? story['author']['name'] ??
+                                                          'Unknown Author'
+                                                    : (story['author']
+                                                          is String)
+                                                    ? story['author']
+                                                    : 'Unknown Author',
+                                                date: story['createdAt'] != null
+                                                    ? DateFormat(
+                                                        'MMM d, yyyy',
+                                                      ).format(
+                                                        DateTime.parse(
+                                                          story['createdAt'],
+                                                        ),
+                                                      )
+                                                    : '',
+                                              );
+                                            } else {
+                                              return const SizedBox.shrink(); // Or a placeholder widget
+                                            }
+                                          })
+                                          .toList()
+                                          .cast<Widget>(),
+                                    )
+                                  : const SizedBox.shrink();
+                            } else if (viewModel.userData!['role'] ==
+                                'writer') {
                               return (viewModel.myStories.isNotEmpty)
                                   ? Column(
-                                      children: viewModel.myStories.map((story) {
-                                        if (story is Map<String, dynamic>) {
-                                          return _buildRecentReadItem(
-                                            title: story['title'] ?? 'No Title',
-                                            author: (story['author'] is Map<String, dynamic>)
-                                                ? story['author']['name'] ?? 'Unknown Author'
-                                                : (story['author'] is String)
-                                                    ? story['author']
-                                                    : 'Unknown Author',
-                                            date: story['createdAt'] != null
-                                                ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
-                                                : '',
-                                          );
-                                        } else {
-                                          return const SizedBox.shrink(); // Or a placeholder widget
-                                        }
-                                      }).toList().cast<Widget>(),
-                                    )
-                                  : (viewModel.trendingStories.isNotEmpty)
-                                      ? Column(
-                                          children: viewModel.trendingStories.map((story) {
+                                      children: viewModel.myStories
+                                          .map((story) {
                                             if (story is Map<String, dynamic>) {
                                               return _buildRecentReadItem(
-                                                title: story['title'] ?? 'No Title',
-                                                author: (story['author'] is Map<String, dynamic>)
-                                                ? story['author']['name'] ?? 'Unknown Author'
-                                                : (story['author'] is String)
+                                                title:
+                                                    story['title'] ??
+                                                    'No Title',
+                                                author:
+                                                    (story['author']
+                                                        is Map<String, dynamic>)
+                                                    ? story['author']['name'] ??
+                                                          'Unknown Author'
+                                                    : (story['author']
+                                                          is String)
                                                     ? story['author']
                                                     : 'Unknown Author',
                                                 date: story['createdAt'] != null
-                                                    ? DateFormat('MMM d, yyyy').format(DateTime.parse(story['createdAt']))
+                                                    ? DateFormat(
+                                                        'MMM d, yyyy',
+                                                      ).format(
+                                                        DateTime.parse(
+                                                          story['createdAt'],
+                                                        ),
+                                                      )
                                                     : '',
                                               );
                                             } else {
                                               return const SizedBox.shrink(); // Or a placeholder widget
                                             }
-                                          }).toList().cast<Widget>(),
-                                        )
-                                      : const SizedBox.shrink();
+                                          })
+                                          .toList()
+                                          .cast<Widget>(),
+                                    )
+                                  : (viewModel.trendingStories.isNotEmpty)
+                                  ? Column(
+                                      children: viewModel.trendingStories
+                                          .map((story) {
+                                            if (story is Map<String, dynamic>) {
+                                              return _buildRecentReadItem(
+                                                title:
+                                                    story['title'] ??
+                                                    'No Title',
+                                                author:
+                                                    (story['author']
+                                                        is Map<String, dynamic>)
+                                                    ? story['author']['name'] ??
+                                                          'Unknown Author'
+                                                    : (story['author']
+                                                          is String)
+                                                    ? story['author']
+                                                    : 'Unknown Author',
+                                                date: story['createdAt'] != null
+                                                    ? DateFormat(
+                                                        'MMM d, yyyy',
+                                                      ).format(
+                                                        DateTime.parse(
+                                                          story['createdAt'],
+                                                        ),
+                                                      )
+                                                    : '',
+                                              );
+                                            } else {
+                                              return const SizedBox.shrink(); // Or a placeholder widget
+                                            }
+                                          })
+                                          .toList()
+                                          .cast<Widget>(),
+                                    )
+                                  : const SizedBox.shrink();
                             } else {
                               return const SizedBox.shrink(); // Handle other roles or no stories
                             }

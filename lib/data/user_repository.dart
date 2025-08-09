@@ -9,9 +9,10 @@ class UserRepository {
   final String _meApiUrl = '${Environment.backendUrl}/api/auth/me';
 
   UserRepository({http.Client? client, required SharedPreferences prefs})
-      : _client = client ?? http.Client(),
-        _prefs = prefs;
+    : _client = client ?? http.Client(),
+      _prefs = prefs;
 
+  // from wt token
   Future<Map<String, dynamic>> getCurrentUserDetails() async {
     final String? token = _prefs.getString('jwt_token');
 
@@ -38,8 +39,28 @@ class UserRepository {
     }
   }
 
+
+  Future<bool> requestWriterAccess(String token) async {
+    final String writerRequestApiUrl =
+        '${Environment.backendUrl}/api/users/writer-request';
+    try {
+      final response = await _client.post(
+        Uri.parse(writerRequestApiUrl),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'User-Agent': 'soma_mobile_client',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+  
   Future<List<dynamic>> fetchRecentReads(String token) async {
-    final String _unlockedStoriesApiUrl = '${Environment.backendUrl}/api/stories/user/unlocked';
+    final String _unlockedStoriesApiUrl =
+        '${Environment.backendUrl}/api/stories/user/unlocked';
     try {
       final response = await _client.get(
         Uri.parse(_unlockedStoriesApiUrl),

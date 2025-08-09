@@ -29,13 +29,23 @@ class ProfilePageViewModel extends ChangeNotifier {
   final SharedPreferences _prefs;
 
   ProfilePageViewModel({required SharedPreferences prefs, http.Client? client})
-      : _prefs = prefs,
-        _userRepository = UserRepository(prefs: prefs, client: client),
-        _storyRepository = StoryRepository(client: client),
-        _trendingStoryRepository = TrendingStoryRepository(client: client) {
+    : _prefs = prefs,
+      _userRepository = UserRepository(prefs: prefs, client: client),
+      _storyRepository = StoryRepository(client: client),
+      _trendingStoryRepository = TrendingStoryRepository(client: client) {
     fetchUserData();
   }
 
+  Future<bool> requestWriterAccess() async {
+    final String? token = _prefs.getString('jwt_token');
+    if (token == null) {
+      _errorMessage = 'No authentication token found. Please log in.';
+      notifyListeners();
+      return false;
+    }
+    return await _userRepository.requestWriterAccess(token);
+  }
+  
   Future<void> fetchUserData() async {
     _errorMessage = '';
     notifyListeners();
