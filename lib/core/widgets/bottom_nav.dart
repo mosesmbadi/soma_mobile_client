@@ -1,14 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:soma/features/home_page/viewmodels/home_page_viewmodel.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soma/data/user_repository.dart';
 
 import 'package:soma/features/my_stories_page/views/my_stories_page.dart';
 import 'package:soma/features/add_story_page/views/add_story_page.dart';
 import 'package:soma/features/profile_page/views/profile_page.dart';
 import 'package:soma/features/home_page/views/home_page.dart';
 
-class BottomNavShell extends StatelessWidget {
+class BottomNavShell extends StatefulWidget {
   const BottomNavShell({super.key});
+
+  @override
+  State<BottomNavShell> createState() => _BottomNavShellState();
+}
+
+class _BottomNavShellState extends State<BottomNavShell> {
+  late SharedPreferences _prefs;
+  late UserRepository _userRepository;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDependencies();
+  }
+
+  Future<void> _initDependencies() async {
+    _prefs = await SharedPreferences.getInstance();
+    _userRepository = UserRepository(prefs: _prefs);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,9 +83,17 @@ class BottomNavShell extends StatelessWidget {
                           currentIndex: viewModel.selectedIndex,
                           selectedItemColor: Colors.blueAccent,
                           unselectedItemColor: Colors.grey,
-                          onTap: (index) {
-                            if (index == 2) { // Index for Add Story
-                              Navigator.pushNamed(context, '/add_story');
+                          onTap: (index) async {
+                            if (index == 2) {
+                              // Check user role before navigating to AddStoryPage
+                              final userDetails = await _userRepository.getCurrentUserDetails();
+                              final userRole = userDetails['role'];
+
+                              if (userRole == 'reader') {
+                                _showAccessDeniedDialog(context);
+                              } else {
+                                Navigator.pushNamed(context, '/add_story');
+                              }
                             } else {
                               viewModel.onItemTapped(index);
                             }
@@ -93,11 +122,46 @@ class BottomNavShell extends StatelessWidget {
         return const HomePage();
       case 1:
         return const MyStoriesPage();
-      
       case 3:
         return const ProfilePage();
       default:
         return const HomePage();
     }
+  }
+
+  void _showAccessDeniedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Access Denied'),
+          content: const Text(
+              'Only writers can add stories. Please request writer access.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Request Writer Access'),
+              onPressed: () async {
+                Navigator.pop(context); // Close dialog
+                // Or directly call the request writer access method if available globally
+                final success = await _userRepository.requestWriterAccess(
+                    _prefs.getString('jwt_token') ?? '');
+                final message = success
+                    ? 'Request sent successfully!'
+                    : 'Failed to send request.';
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(message)),
+                );
+              },
+            ),
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }
