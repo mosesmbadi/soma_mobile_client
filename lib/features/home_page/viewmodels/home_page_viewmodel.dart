@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soma/core/widgets/show_toast.dart';
 import '../../../data/story_repository.dart';
 import '../../../data/trending_story_repository.dart';
 
@@ -26,12 +27,7 @@ class HomePageViewModel extends ChangeNotifier {
 
   void onItemTapped(int index, BuildContext context) {
     if (index == 2 && _userRole == 'reader') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Readers cannot upload stories. Please request a writer account.'),
-          duration: Duration(seconds: 3),
-        ),
-      );
+      showToast(context, 'Readers cannot upload stories. Please request a writer account.', isSuccess: false);
       return;
     }
     _selectedIndex = index;
