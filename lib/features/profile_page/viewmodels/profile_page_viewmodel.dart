@@ -7,6 +7,7 @@ import '../../../core/config/environment.dart';
 import 'package:soma/data/user_repository.dart';
 import 'package:soma/data/story_repository.dart';
 import 'package:soma/data/trending_story_repository.dart';
+import '../../../core/widgets/show_toast.dart';
 
 const String apiUrl = '${Environment.backendUrl}/api/auth/me';
 
@@ -22,6 +23,10 @@ class ProfilePageViewModel extends ChangeNotifier {
   List<dynamic> get myStories => _myStories;
   List<dynamic> get trendingStories => _trendingStories;
   String get errorMessage => _errorMessage;
+
+  Future<String?> getAuthToken() async {
+    return _prefs.getString('jwt_token');
+  }
 
   final UserRepository _userRepository;
   final StoryRepository _storyRepository;
@@ -169,5 +174,39 @@ class ProfilePageViewModel extends ChangeNotifier {
         );
       },
     );
+  }
+
+  Future<void> requestWithdrawal(double amount, BuildContext context) async {
+    final String? token = await getAuthToken();
+    if (token == null) {
+      showToast(context, 'Authentication token not found. Please log in again.', isSuccess: false);
+      return;
+    }
+
+    final url = Uri.parse('${Environment.backendUrl}/api/users/withdrawal-request');
+    try {
+      final response = await http.post(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'amount_requested': amount,
+        }),
+      );
+
+      final responseBody = jsonDecode(response.body);
+      final bool success = responseBody['success'] ?? false;
+      final String message = responseBody['message'] ?? 'An unknown error occurred.';
+
+      if (success) {
+        showToast(context, message, isSuccess: true);
+      } else {
+        showToast(context, message, isSuccess: false);
+      }
+    } catch (e) {
+      showToast(context, 'Failed to connect to the server: $e', isSuccess: false);
+    }
   }
 }

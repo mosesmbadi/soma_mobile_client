@@ -67,25 +67,8 @@ class ProfileActionButtons extends StatelessWidget {
             onPressed: () {
               WithdrawBottomSheet.show(
                 context: context,
-                onWithdraw: (amount) {
-                  // TODO: Implement actual API call to /api/user/payment-request
-                  print('Withdrawal amount: $amount');
-                  // Example of how you might call an API (requires http/dio package)
-                  // final response = await http.post(
-                  //   Uri.parse('https://your-api-url.com/api/user/payment-request'),
-                  //   headers: <String, String>{
-                  //     'Content-Type': 'application/json; charset=UTF-8',
-                  //   },
-                  //   body: jsonEncode(<String, dynamic>{
-                  //     'amount': amount,
-                  //     'paymentMethod': 'M-Pesa', // This would likely come from user selection
-                  //   }),
-                  // );
-                  // if (response.statusCode == 200) {
-                  //   print('Withdrawal request sent successfully!');
-                  // } else {
-                  //   print('Failed to send withdrawal request: ${response.statusCode}');
-                  // }
+                onWithdraw: (amount) async {
+                  await viewModel.requestWithdrawal(amount, context);
                 },
               );
             },
