@@ -52,6 +52,7 @@ class ProfileActionButtons extends StatelessWidget {
             onPressed: () {
               MpesaTopUpBottomSheet.show(
                 context: context,
+                initialPhoneNumber: viewModel.phoneNumber,
                 onConfirm: (amount, phoneNumber) async {
                   await viewModel.requestMpesaTopUp(amount, phoneNumber, context);
                 },

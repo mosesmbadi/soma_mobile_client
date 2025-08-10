@@ -23,6 +23,7 @@ class ProfilePageViewModel extends ChangeNotifier {
   List<dynamic> get myStories => _myStories;
   List<dynamic> get trendingStories => _trendingStories;
   String get errorMessage => _errorMessage;
+  String? get phoneNumber => _userData?['phone'];
 
   Future<String?> getAuthToken() async {
     return _prefs.getString('jwt_token');
@@ -74,6 +75,7 @@ class ProfilePageViewModel extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         _userData = jsonDecode(response.body) as Map<String, dynamic>;
+        print('User Data fetched: $_userData'); // Add this line
         if (_userData!['role'] == 'reader') {
           await _fetchRecentReads(token);
           if (_recentReads.isEmpty) {
