@@ -43,8 +43,3 @@ flutter:
     - assets/images/landing_page_hero1.jpg
     - assets/images/google_logo.png
     - assets/images/default_thumbnail.jpg
-
-  fonts:
-    - family: PlaywriteQLD
-      fonts:
-        - asset: assets/google_fonts/static/PlaywriteAUQLD-Regular.ttf

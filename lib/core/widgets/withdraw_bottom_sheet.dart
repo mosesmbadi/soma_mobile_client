@@ -38,7 +38,7 @@ class _WithdrawBottomSheetContentState extends State<_WithdrawBottomSheetContent
   void _updateConversion() {
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     setState(() {
-      _convertedKsh = amount * 100; // Example: 1 token = 100 KSh
+      _convertedKsh = amount * 1; //1 token = 1 KSh
     });
   }
 
@@ -63,7 +63,7 @@ class _WithdrawBottomSheetContentState extends State<_WithdrawBottomSheetContent
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             const Text(
-              'Withdraw Tokens',
+              'How much would you like to withdraw?',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
@@ -71,7 +71,7 @@ class _WithdrawBottomSheetContentState extends State<_WithdrawBottomSheetContent
               controller: _amountController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: 'Amount in Tokens',
+                labelText: 'Amount in KSh',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -79,7 +79,7 @@ class _WithdrawBottomSheetContentState extends State<_WithdrawBottomSheetContent
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Equivalent in KSh: ${_convertedKsh.toStringAsFixed(2)}',
+                'Tokens: ${_convertedKsh.toStringAsFixed(2)} (1Tk = 1Ksh)',
                 style: const TextStyle(fontSize: 16),
               ),
             ),
@@ -93,6 +93,10 @@ class _WithdrawBottomSheetContentState extends State<_WithdrawBottomSheetContent
             ),
             const SizedBox(height: 20),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF333333),
+                foregroundColor: Colors.white, // Text & icon color
+              ),
               onPressed: () {
                 final amount = double.tryParse(_amountController.text);
                 if (amount != null && amount > 0) {

@@ -61,16 +61,13 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         primarySwatch: Colors.blue,
-        textTheme: TextTheme(
-          displayLarge: const TextStyle(
-            fontSize: 72,
-            fontWeight: FontWeight.bold,
-          ),
-          titleLarge: GoogleFonts.roboto(
-            fontSize: 20,
-          ),
-          bodyMedium: GoogleFonts.roboto(),
-          displaySmall: GoogleFonts.pacifico(),
+        textTheme: GoogleFonts.robotoTextTheme(
+          Theme.of(context).textTheme.copyWith(
+                displayLarge: const TextStyle(
+                  fontSize: 72,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
         ),
       ),
 
