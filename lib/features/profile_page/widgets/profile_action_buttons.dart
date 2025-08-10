@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:soma/features/profile_page/viewmodels/profile_page_viewmodel.dart';
 import 'package:soma/core/widgets/withdraw_bottom_sheet.dart';
+import 'package:soma/core/widgets/mpesa_top_up_bottom_sheet.dart';
 
 class ProfileActionButtons extends StatelessWidget {
   final ProfilePageViewModel viewModel;
@@ -48,7 +49,14 @@ class ProfileActionButtons extends StatelessWidget {
           _buildCustomActionButton(
             icon: Icons.wallet,
             label: 'Top up',
-            onPressed: () => viewModel.showTopUpDialog(context),
+            onPressed: () {
+              MpesaTopUpBottomSheet.show(
+                context: context,
+                onConfirm: (amount, phoneNumber) async {
+                  await viewModel.requestMpesaTopUp(amount, phoneNumber, context);
+                },
+              );
+            },
             backgroundColor: const Color(0xFF333333),
             iconColor: const Color(0xD1E4FFFF),
           ),

@@ -179,7 +179,7 @@ class ProfilePageViewModel extends ChangeNotifier {
   Future<void> requestWithdrawal(double amount, BuildContext context) async {
     final String? token = await getAuthToken();
     if (token == null) {
-      showToast(context, 'Authentication token not found. Please log in again.', isSuccess: false);
+      showToast(context, 'Authentication token not found. Please log in again.', type: ToastType.error);
       return;
     }
 
@@ -201,12 +201,47 @@ class ProfilePageViewModel extends ChangeNotifier {
       final String message = responseBody['message'] ?? 'An unknown error occurred.';
 
       if (success) {
-        showToast(context, message, isSuccess: true);
+        showToast(context, message, type: ToastType.success);
       } else {
-        showToast(context, message, isSuccess: false);
+        showToast(context, message, type: ToastType.error);
       }
     } catch (e) {
-      showToast(context, 'Failed to connect to the server: $e', isSuccess: false);
+      showToast(context, 'Failed to connect to the server: $e', type: ToastType.error);
+    }
+  }
+
+  Future<void> requestMpesaTopUp(double amount, String phoneNumber, BuildContext context) async {
+    final String? token = await getAuthToken();
+    if (token == null) {
+      showToast(context, 'Authentication token not found. Please log in again.', type: ToastType.error);
+      return;
+    }
+
+    final url = Uri.parse('${Environment.backendUrl}/api/mpesa/stkpush');
+    try {
+      final response = await http.post(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'amount': amount,
+          'phoneNumber': phoneNumber,
+        }),
+      );
+
+      final responseBody = jsonDecode(response.body);
+      final bool success = responseBody['success'] ?? false;
+      final String message = responseBody['message'] ?? 'An unknown error occurred.';
+
+      if (success) {
+        showToast(context, message, type: ToastType.success);
+      } else {
+        showToast(context, message, type: ToastType.error);
+      }
+    } catch (e) {
+      showToast(context, 'Failed to connect to the server: $e', type: ToastType.error);
     }
   }
 }
