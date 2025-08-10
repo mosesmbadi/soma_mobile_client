@@ -30,29 +30,39 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
   bool _isStoryUnlocked = false;
   int _currentUserTokens = 0;
   bool _isUnlocking = false;
+  bool _isDataLoaded = false; // New flag
 
   @override
   void initState() {
     super.initState();
     _httpClient = http.Client(); // Initialize http client
-    _initializeDependencies();
+    _initializeDependencies().then((_) {
+      // After dependencies are initialized, fetch data
+      _initializeData();
+    });
   }
 
   Future<void> _initializeDependencies() async {
-    _prefs = await SharedPreferences.getInstance();
+    _prefs = await SharedPreferences.getInstance(); // Await here
     _userRepository = UserRepository(prefs: _prefs, client: _httpClient);
     _storyRepository = StoryRepository(client: _httpClient);
-    _initializeData();
+    // _initializeData() will be called in .then() block of initState
   }
 
   Future<void> _initializeData() async {
     final String? token = _prefs.getString('jwt_token');
     if (token == null) {
       print('Error: No authentication token found.');
+      setState(() {
+        _isDataLoaded = true; // Set to true even if no token, to stop loading indicator
+      });
       return;
     }
-    _fetchCurrentUserTokens();
-    _checkStoryUnlockStatus(token);
+    await _fetchCurrentUserTokens(); // Await here
+    await _checkStoryUnlockStatus(token); // Await here
+    setState(() {
+      _isDataLoaded = true; // Set to true after data is loaded
+    });
   }
 
   Future<void> _fetchCurrentUserTokens() async {
@@ -60,7 +70,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
       final userDetails = await _userRepository.getCurrentUserDetails();
       setState(() {
         _currentUserId = userDetails['_id'];
-        _currentUserTokens = userDetails['tokens'] ?? 0;
+        _currentUserTokens = (userDetails['tokens'] as num?)?.toInt() ?? 0; // Fixed type conversion
       });
     } catch (e) {
       print('Error fetching current user details: $e');
@@ -147,8 +157,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     final String storySlug = widget.story['slug'] ?? '';
     final int estimatedTime = widget.story['estimatedTime'] ?? 30;
     final bool isPremium = widget.story['is_premium'] == true;
-    final bool isMyStory =
-        _currentUserId != null &&
+    final bool isMyStory = _currentUserId != null &&
         widget.story['author']?['_id'] == _currentUserId;
 
     return ChangeNotifierProvider(
@@ -180,108 +189,110 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
             appBar: AppBar(
               backgroundColor: const Color.fromARGB(255, 232, 186, 255),
             ),
-            body: SingleChildScrollView(
-              controller: viewModel.scrollController,
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row( // Wrap author and tags in a Row
-                    children: [
-                      Text(
-                        'By $authorName',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      const SizedBox(width: 8), // Space between author and tags
-                      if (widget.story['tags'] != null && widget.story['tags'].isNotEmpty)
-                        Expanded( // Use Expanded to allow tags to wrap
-                          child: Wrap(
-                            spacing: 6.0,
-                            runSpacing: 0.0,
-                            children: (widget.story['tags'] as List<dynamic>).map((tag) {
-                              final Map<String, dynamic> tagMap = tag as Map<String, dynamic>;
-                              return Chip(
-                                label: Text(
-                                  tagMap['name'],
-                                  style: const TextStyle(fontSize: 10, color: Colors.white),
-                                ),
-                                backgroundColor: Colors.blueGrey,
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                visualDensity: VisualDensity.compact,
-                              );
-                            }).toList(),
+            body: _isDataLoaded
+                ? SingleChildScrollView(
+                    controller: viewModel.scrollController,
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  if (thumbnailUrl != null && thumbnailUrl.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
-                        child: Image.network(
-                          thumbnailUrl,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                                height: 200,
-                                color: Colors.grey[300],
-                                child: const Icon(Icons.broken_image, size: 50),
+                        const SizedBox(height: 8),
+                        Row( // Wrap author and tags in a Row
+                          children: [
+                            Text(
+                              'By $authorName',
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                            const SizedBox(width: 8), // Space between author and tags
+                            if (widget.story['tags'] != null && widget.story['tags'].isNotEmpty)
+                              Expanded( // Use Expanded to allow tags to wrap
+                                child: Wrap(
+                                  spacing: 6.0,
+                                  runSpacing: 0.0,
+                                  children: (widget.story['tags'] as List<dynamic>).map((tag) {
+                                    final Map<String, dynamic> tagMap = tag as Map<String, dynamic>;
+                                    return Chip(
+                                      label: Text(
+                                        tagMap['name'],
+                                        style: const TextStyle(fontSize: 10, color: Colors.white),
+                                      ),
+                                      backgroundColor: Colors.blueGrey,
+                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      visualDensity: VisualDensity.compact,
+                                    );
+                                  }).toList(),
+                                ),
                               ),
+                          ],
                         ),
-                      ),
-                    ),
+                        const SizedBox(height: 16),
+                        if (thumbnailUrl != null && thumbnailUrl.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16.0),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8.0),
+                              child: Image.network(
+                                thumbnailUrl,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Container(
+                                      height: 200,
+                                      color: Colors.grey[300],
+                                      child: const Icon(Icons.broken_image, size: 50),
+                                    ),
+                              ),
+                            ),
+                          ),
 
-                  // Display full story content
-                  QuillEditor(
-                    controller: quillController,
-                    focusNode: FocusNode(),
-                    scrollController: ScrollController(),
-                    config: QuillEditorConfig(
-                      embedBuilders: FlutterQuillEmbeds.editorBuilders(),
-                      padding: const EdgeInsets.all(0),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 24,
-                  ), // Add some space before the premium card
-                  // Premium gate at the end of the story
-                  if (isPremium) ...[
-                    if (_currentUserId == null) // Guest user
-                      GuestRegistrationCard(
-                        onRegisterPressed: () {
-                          // Navigate to registration/login page
-                          Navigator.pushNamed(context, '/register');
-                        },
-                      )
-                    else if (!_isStoryUnlocked && !isMyStory) ...[
-                      if (_currentUserTokens < 1)
-                        StoryUnlockCard(
-                          cardType: UnlockCardType.topUp,
-                          onButtonPressed: _handleTopUp,
-                          isLoading: _isUnlocking,
-                        )
-                      else
-                        StoryUnlockCard(
-                          cardType: UnlockCardType.unlock,
-                          onButtonPressed: _handleUnlockStory,
-                          isLoading: _isUnlocking,
+                        // Display full story content
+                        QuillEditor(
+                          controller: quillController,
+                          focusNode: FocusNode(),
+                          scrollController: ScrollController(),
+                          config: QuillEditorConfig(
+                            embedBuilders: FlutterQuillEmbeds.editorBuilders(),
+                            padding: const EdgeInsets.all(0),
+                          ),
                         ),
-                    ],
-                  ],
-                ],
-              ),
-            ),
+                        const SizedBox(
+                          height: 24,
+                        ), // Add some space before the premium card
+                        // Premium gate at the end of the story
+                        if (isPremium) ...[
+                          if (_currentUserId == null) // Guest user
+                            GuestRegistrationCard(
+                              onRegisterPressed: () {
+                                // Navigate to registration/login page
+                                Navigator.pushNamed(context, '/register');
+                              },
+                            )
+                          else if (!_isStoryUnlocked && !isMyStory) ...[
+                            if (_currentUserTokens < 1)
+                              StoryUnlockCard(
+                                cardType: UnlockCardType.topUp,
+                                onButtonPressed: () { _handleTopUp(); },
+                                isLoading: _isUnlocking,
+                              )
+                            else
+                              StoryUnlockCard(
+                                cardType: UnlockCardType.unlock,
+                                onButtonPressed: () { _handleUnlockStory(); },
+                                isLoading: _isUnlocking,
+                              ),
+                          ],
+                        ],
+                      ],
+                    ),
+                  )
+                : const Center(child: CircularProgressIndicator()), // Show loading indicator
           );
         },
       ),

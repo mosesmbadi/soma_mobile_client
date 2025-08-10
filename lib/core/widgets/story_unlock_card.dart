@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:soma/data/user_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 enum UnlockCardType { unlock, topUp }
 
-class StoryUnlockCard extends StatefulWidget {
+class StoryUnlockCard extends StatelessWidget {
   final int neededTokens;
   final UnlockCardType cardType;
-  final VoidCallback onButtonPressed;
+  final Function() onButtonPressed;
   final bool isLoading;
 
   const StoryUnlockCard({
@@ -20,38 +21,18 @@ class StoryUnlockCard extends StatefulWidget {
   });
 
   @override
-  State<StoryUnlockCard> createState() => _StoryUnlockCardState();
-}
-
-class _StoryUnlockCardState extends State<StoryUnlockCard> {
-  late final UserRepository _userRepository;
-  late final SharedPreferences _prefs;
-  late final http.Client _httpClient;
-
-  @override
-  void initState() {
-    super.initState();
-    _httpClient = http.Client();
-    _initializeDependencies();
-  }
-
-  Future<void> _initializeDependencies() async {
-    _prefs = await SharedPreferences.getInstance();
-    _userRepository = UserRepository(prefs: _prefs, client: _httpClient);
-    setState(() {}); // Rebuild to use the initialized repository
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final UserRepository userRepository = Provider.of<UserRepository>(context);
+
     return FutureBuilder<Map<String, dynamic>>(
-      future: _userRepository.getCurrentUserDetails(),
+      future: userRepository.getCurrentUserDetails(),
       builder: (context, snapshot) {
         int currentBalance = 0;
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.hasData) {
-          currentBalance = snapshot.data?['tokens'] ?? 0;
+          currentBalance = (snapshot.data?['tokens'] as num?)?.toInt() ?? 0;
         } else if (snapshot.hasError) {
-          // Handle error, maybe log it or show a default value
+          print('Error fetching current user details in StoryUnlockCard: ${snapshot.error}');
         }
 
         String title;
@@ -59,13 +40,12 @@ class _StoryUnlockCardState extends State<StoryUnlockCard> {
         String buttonText;
         IconData icon;
 
-        if (widget.cardType == UnlockCardType.unlock) {
+        if (cardType == UnlockCardType.unlock) {
           title = 'Unlock Story';
           description = "Unlock this premium story to continue reading.";
           buttonText = 'Unlock Now';
           icon = Icons.lock_open;
         } else {
-          // UnlockCardType.topUp
           title = 'Top Up Account';
           description =
               "You've reached your free reading limit. Top up your account to continue enjoying this amazing story.";
@@ -80,7 +60,6 @@ class _StoryUnlockCardState extends State<StoryUnlockCard> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                // Top notch
                 Container(
                   width: 40,
                   height: 5,
@@ -90,7 +69,6 @@ class _StoryUnlockCardState extends State<StoryUnlockCard> {
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
-                // Icon circle
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -102,18 +80,16 @@ class _StoryUnlockCardState extends State<StoryUnlockCard> {
                 const SizedBox(height: 16),
                 Text(
                   title,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   description,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Colors.black87),
+                  style: const TextStyle(fontSize: 14, color: Colors.black87),
                 ),
                 const SizedBox(height: 20),
-                // Balance info (only for unlock, or if we want to show current balance for top-up too)
-                if (widget.cardType ==
-                    UnlockCardType.unlock) // Only show balance for unlock
+                if (cardType == UnlockCardType.unlock)
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -132,27 +108,23 @@ class _StoryUnlockCardState extends State<StoryUnlockCard> {
                         Expanded(
                           child: _buildTokenRow(
                             'Needed to Unlock',
-                            widget.neededTokens,
+                            neededTokens,
                           ),
                         ),
                       ],
                     ),
                   ),
                 const SizedBox(height: 20),
-                // Token packages (only for top-up)
-                if (widget.cardType == UnlockCardType.topUp) ...[
+                if (cardType == UnlockCardType.topUp) ...[
                   _buildTokenOption('100 Tokens', 'Ksh120.99', highlight: true),
                   const SizedBox(height: 12),
                   _buildTokenOption('50 Tokens', 'Ksh10.99'),
                   const SizedBox(height: 20),
                 ],
-                // Action button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: widget.isLoading
-                        ? null
-                        : widget.onButtonPressed, // Disable when loading
+                    onPressed: isLoading ? null : onButtonPressed,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       backgroundColor: const Color(0xFF333333),
@@ -161,13 +133,13 @@ class _StoryUnlockCardState extends State<StoryUnlockCard> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: widget.isLoading
+                    child: isLoading
                         ? const CircularProgressIndicator(
                             color: Colors.white,
-                          ) // Show loading indicator
+                          )
                         : Text(
                             buttonText,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -175,10 +147,8 @@ class _StoryUnlockCardState extends State<StoryUnlockCard> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                // Maybe Later button (only for unlock)
-                if (widget.cardType == UnlockCardType.unlock &&
-                    !widget.isLoading) // Hide when loading
-                  Text('Maybe Later', style: TextStyle(fontSize: 16)),
+                if (cardType == UnlockCardType.unlock && !isLoading)
+                  const Text('Maybe Later', style: TextStyle(fontSize: 16)),
               ],
             ),
           ),
@@ -187,7 +157,7 @@ class _StoryUnlockCardState extends State<StoryUnlockCard> {
     );
   }
 
-  Widget _buildTokenRow(String label, int value) {
+  static Widget _buildTokenRow(String label, int value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -207,7 +177,7 @@ class _StoryUnlockCardState extends State<StoryUnlockCard> {
     );
   }
 
-  Widget _buildTokenOption(
+  static Widget _buildTokenOption(
     String title,
     String price, {
     bool highlight = false,
@@ -222,11 +192,11 @@ class _StoryUnlockCardState extends State<StoryUnlockCard> {
         color: Colors.white,
         border: Border.all(color: borderColor, width: 1.5),
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: const Color.fromRGBO(0, 0, 0, 0.05),
+            color: Color.fromRGBO(0, 0, 0, 0.05),
             blurRadius: 4,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),

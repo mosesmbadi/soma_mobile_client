@@ -5,13 +5,13 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Import the new widgets
-import 'package:soma/features/add_story_page/views/add_story_app_bar.dart';
-import 'package:soma/features/add_story_page/views/publish_save_row.dart';
-import 'package:soma/features/add_story_page/views/story_title_input.dart';
-import 'package:soma/features/add_story_page/views/tag_selection_section.dart';
-import 'package:soma/features/add_story_page/views/text_manipulation_toolbar.dart';
-import 'package:soma/features/add_story_page/views/story_content_editor.dart';
-import 'package:soma/features/add_story_page/views/floating_share_options.dart';
+import 'package:soma/features/add_story_page/widgets/add_story_app_bar.dart';
+import 'package:soma/features/add_story_page/widgets/publish_save_row.dart';
+import 'package:soma/features/add_story_page/widgets/story_title_input.dart';
+import 'package:soma/features/add_story_page/widgets/tag_selection_section.dart';
+import 'package:soma/features/add_story_page/widgets/text_manipulation_toolbar.dart';
+import 'package:soma/features/add_story_page/widgets/story_content_editor.dart';
+import 'package:soma/features/add_story_page/widgets/floating_share_options.dart';
 
 class AddStoryPage extends StatelessWidget {
   const AddStoryPage({super.key});

@@ -9,29 +9,42 @@ import 'package:soma/features/add_story_page/views/add_story_page.dart';
 import 'package:soma/core/widgets/bottom_nav.dart';
 import 'package:soma/features/registration_page/views/registration_page.dart';
 import 'package:soma/features/profile_page/views/profile_update_page.dart';
-import 'package:provider/provider.dart'; // Import provider
-import 'package:http/http.dart' as http; // Import http
-import 'package:shared_preferences/shared_preferences.dart'; // Import shared_preferences
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soma/data/user_repository.dart'; // Import UserRepository
+import 'package:soma/data/story_repository.dart'; // Import StoryRepository
 
-Future<void> main() async { // Make main async
-  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter binding is initialized
-  final SharedPreferences prefs = await SharedPreferences.getInstance(); // Get SharedPreferences instance
-  final String? token = prefs.getString('jwt_token'); // Get token
-  final bool? rememberMe = prefs.getBool('remember_me'); // Get remember_me flag
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final String? token = prefs.getString('jwt_token');
+  final bool? rememberMe = prefs.getBool('remember_me');
 
-  Widget defaultHome = const LandingPage(); // Default to LandingPage
+  Widget defaultHome = const LandingPage();
 
   if (token != null && rememberMe == true) {
-    defaultHome = const BottomNavShell(); // Navigate to home if remembered
+    defaultHome = const BottomNavShell();
   }
 
   runApp(
     MultiProvider(
       providers: [
         Provider<http.Client>(create: (_) => http.Client()),
-        Provider<SharedPreferences>(create: (_) => prefs), // Provide the obtained instance
+        Provider<SharedPreferences>(create: (_) => prefs),
+        Provider<UserRepository>(
+          create: (context) => UserRepository(
+            prefs: Provider.of<SharedPreferences>(context, listen: false),
+            client: Provider.of<http.Client>(context, listen: false),
+          ),
+        ),
+        Provider<StoryRepository>(
+          create: (context) => StoryRepository(
+            client: Provider.of<http.Client>(context, listen: false),
+          ),
+        ),
       ],
-      child: MyApp(defaultHome: defaultHome), // Pass defaultHome to MyApp
+      child: MyApp(defaultHome: defaultHome),
     ),
   );
 }
