@@ -10,42 +10,37 @@ class StoryContentEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(8.0),
-              child: QuillEditor(
-                controller: viewModel.controller,
-                focusNode: viewModel.focusNode,
-                scrollController:
-                    viewModel.scrollController,
-                config: QuillEditorConfig(
-                  placeholder: 'Story Content',
-                  embedBuilders: FlutterQuillEmbeds.editorBuilders(),
-                ),
+    // The Expanded widget is removed from here
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // This is the main change: QuillEditor is now directly in the Column
+        // and uses shrinkWrap.
+        Container(
+          padding: const EdgeInsets.all(8.0),
+          child: QuillEditor(
+            controller: viewModel.controller,
+            focusNode: viewModel.focusNode,
+            scrollController: viewModel.scrollController,
+            config: QuillEditorConfig(
+              placeholder: 'Story Content',
+              embedBuilders: FlutterQuillEmbeds.editorBuilders(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16.0),
+        if (viewModel.errorMessage.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: Text(
+              viewModel.errorMessage,
+              style: const TextStyle(
+                color: Colors.red,
+                fontSize: 14.0,
               ),
             ),
           ),
-
-          const SizedBox(height: 16.0),
-
-          if (viewModel.errorMessage.isNotEmpty)
-            Padding(
-              padding:
-                  const EdgeInsets.only(bottom: 16.0),
-              child: Text(
-                viewModel.errorMessage,
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 14.0,
-                ),
-              ),
-            ),
-        ],
-      ),
+      ],
     );
   }
 }
