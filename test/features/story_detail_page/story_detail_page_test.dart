@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Import for MethodChannel
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
@@ -34,6 +35,18 @@ void main() {
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
     HttpOverrides.global = null;
+
+    // Mock SharedPreferences platform channel to prevent MissingPluginException
+    // This handles calls to the native side that SharedPreferences.getInstance() might make
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+      const MethodChannel('plugins.flutter.io/shared_preferences'),
+      (MethodCall methodCall) async {
+        if (methodCall.method == 'getAll') {
+          return <String, dynamic>{};
+        }
+        return null;
+      },
+    );
   });
 
   setUp(() {
@@ -47,6 +60,18 @@ void main() {
     reset(mockStoryDetailViewModel);
     reset(mockSharedPreferences);
     reset(mockHttpClient);
+
+    // Mock SharedPreferences.getInstance() to return our mock instance
+    // This is crucial for widgets that call SharedPreferences.getInstance()
+    when(SharedPreferences.getInstance()).thenAnswer((_) async => mockSharedPreferences);
+
+    // Default mocks for common scenarios
+    when(mockSharedPreferences.getString(any as String)).thenReturn('dummy_token');
+    when(mockUserRepository.getCurrentUserDetails()).thenAnswer((_) async => {
+          '_id': 'user123',
+          'tokens': 10,
+        });
+    when(mockStoryRepository.isStoryUnlocked(any as String, any as String)).thenAnswer((_) async => false);
   });
 
   Widget createStoryDetailPage({
@@ -83,13 +108,6 @@ void main() {
     };
 
     testWidgets('displays basic story information', (WidgetTester tester) async {
-      when(mockSharedPreferences.getString('jwt_token')).thenReturn('dummy_token');
-      when(mockUserRepository.getCurrentUserDetails()).thenReturn(Future.value({
-            '_id': 'user123',
-            'tokens': 10,
-          }));
-      when(mockStoryRepository.isStoryUnlocked(any as String, any as String)).thenReturn(Future.value(false));
-
       await tester.pumpWidget(createStoryDetailPage(story: baseStory));
       await tester.pumpAndSettle();
 
@@ -102,7 +120,8 @@ void main() {
 
     testWidgets('displays GuestRegistrationCard for premium story when not logged in', (WidgetTester tester) async {
       final premiumStory = {...baseStory, 'is_premium': true};
-      when(mockSharedPreferences.getString('jwt_token')).thenReturn(null);
+      // Override default mock for this test case
+      when(mockSharedPreferences.getString(any as String)).thenReturn(null);
 
       await tester.pumpWidget(createStoryDetailPage(story: premiumStory));
       await tester.pumpAndSettle();
@@ -113,12 +132,13 @@ void main() {
 
     testWidgets('displays UnlockCard for premium story when logged in with enough tokens', (WidgetTester tester) async {
       final premiumStory = {...baseStory, 'is_premium': true};
-      when(mockSharedPreferences.getString('jwt_token')).thenReturn('dummy_token');
-      when(mockUserRepository.getCurrentUserDetails()).thenReturn(Future.value({
+      // Override default mocks for this test case
+      when(mockSharedPreferences.getString(any as String)).thenReturn('dummy_token');
+      when(mockUserRepository.getCurrentUserDetails()).thenAnswer((_) async => {
             '_id': 'user123',
             'tokens': 10,
-          }));
-      when(mockStoryRepository.isStoryUnlocked(any as String, any as String)).thenReturn(Future.value(false));
+          });
+      when(mockStoryRepository.isStoryUnlocked(any as String, any as String)).thenAnswer((_) async => false);
 
       await tester.pumpWidget(createStoryDetailPage(story: premiumStory));
       await tester.pumpAndSettle();
@@ -130,12 +150,13 @@ void main() {
 
     testWidgets('displays TopUpCard for premium story when logged in with no tokens', (WidgetTester tester) async {
       final premiumStory = {...baseStory, 'is_premium': true};
-      when(mockSharedPreferences.getString('jwt_token')).thenReturn('dummy_token');
-      when(mockUserRepository.getCurrentUserDetails()).thenReturn(Future.value({
+      // Override default mocks for this test case
+      when(mockSharedPreferences.getString(any as String)).thenReturn('dummy_token');
+      when(mockUserRepository.getCurrentUserDetails()).thenAnswer((_) async => {
             '_id': 'user123',
             'tokens': 0,
-          }));
-      when(mockStoryRepository.isStoryUnlocked(any as String, any as String)).thenReturn(Future.value(false));
+          });
+      when(mockStoryRepository.isStoryUnlocked(any as String, any as String)).thenAnswer((_) async => false);
 
       await tester.pumpWidget(createStoryDetailPage(story: premiumStory));
       await tester.pumpAndSettle();
@@ -147,12 +168,13 @@ void main() {
 
     testWidgets('does not display any unlock cards when the story is already unlocked', (WidgetTester tester) async {
       final premiumStory = {...baseStory, 'is_premium': true};
-      when(mockSharedPreferences.getString('jwt_token')).thenReturn('dummy_token');
-      when(mockUserRepository.getCurrentUserDetails()).thenReturn(Future.value({
+      // Override default mocks for this test case
+      when(mockSharedPreferences.getString(any as String)).thenReturn('dummy_token');
+      when(mockUserRepository.getCurrentUserDetails()).thenAnswer((_) async => {
             '_id': 'user123',
             'tokens': 10,
-          }));
-      when(mockStoryRepository.isStoryUnlocked(any as String, any as String)).thenReturn(Future.value(true));
+          });
+      when(mockStoryRepository.isStoryUnlocked(any as String, any as String)).thenAnswer((_) async => true);
 
       await tester.pumpWidget(createStoryDetailPage(story: premiumStory));
       await tester.pumpAndSettle();

@@ -26,8 +26,8 @@ void main() {
       await tester.tap(find.text('Show Bottom Sheet'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Withdraw Tokens'), findsOneWidget);
-      expect(find.text('Amount in Tokens'), findsOneWidget);
+      expect(find.text('How much would you like to withdraw?'), findsOneWidget);
+      expect(find.text('Amount in KSh'), findsOneWidget);
       expect(find.text('Confirm Withdrawal'), findsOneWidget);
     });
 
@@ -56,7 +56,7 @@ void main() {
       await tester.enterText(find.byType(TextField), '10');
       await tester.pumpAndSettle();
 
-      expect(find.text('Equivalent in KSh: 1000.00'), findsOneWidget);
+      expect(find.textContaining('Tokens: 10.00 (1Tk = 1Ksh)'), findsOneWidget);
     });
 
     testWidgets('calls onWithdraw with correct amount and closes sheet on confirm', (WidgetTester tester) async {
@@ -92,7 +92,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(withdrawnAmount, 25.0);
-      expect(find.text('Withdraw Tokens'), findsNothing); // Sheet should be closed
+      expect(find.text('How much would you like to withdraw?'), findsNothing); // Sheet should be closed
     });
 
     testWidgets('shows error for invalid amount and does not call onWithdraw', (WidgetTester tester) async {
