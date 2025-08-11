@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soma/data/story_repository.dart';
 import 'package:soma/data/user_repository.dart';
 import 'package:http/http.dart' as http;
+import 'package:soma/features/author_profile_page/views/author_profile_page.dart';
 
 class StoryDetailPage extends StatefulWidget {
   final Map<String, dynamic> story;
@@ -206,9 +207,25 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                         const SizedBox(height: 8),
                         Row( // Wrap author and tags in a Row
                           children: [
-                            Text(
-                              'By $authorName',
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            GestureDetector(
+                              onTap: () {
+                                final String? authorId = widget.story['author']?['_id'];
+                                if (authorId != null) {
+                                  print('Navigating to AuthorProfilePage with authorId: $authorId');
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AuthorProfilePage(authorId: authorId),
+                                    ),
+                                  );
+                                } else {
+                                  print('Author ID is null. Cannot navigate to AuthorProfilePage.');
+                                }
+                              },
+                              child: Text(
+                                'By $authorName',
+                                style: const TextStyle(fontSize: 12, color: Colors.blue, decoration: TextDecoration.underline),
+                              ),
                             ),
                             const SizedBox(width: 8), // Space between author and tags
                             if (widget.story['tags'] != null && widget.story['tags'].isNotEmpty)

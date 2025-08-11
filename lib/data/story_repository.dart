@@ -100,6 +100,23 @@ class StoryRepository {
     }
   }
 
+  Future<List<dynamic>> getStoriesByAuthor(String authorId) async {
+    final String authorStoriesApiUrl = '${Environment.backendUrl}/api/stories/author/$authorId';
+    try {
+      final response = await _client.get(Uri.parse(authorStoriesApiUrl));
+
+      if (response.statusCode == 200) {
+        print('StoryRepository: Raw response body for getStoriesByAuthor: ${response.body}');
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to load stories by author $authorId: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('An error occurred while fetching stories by author $authorId: $e');
+    }
+  }
+
   Future<void> unlockStory(String storyId, String token) async {
     try {
       final response = await _client.post(

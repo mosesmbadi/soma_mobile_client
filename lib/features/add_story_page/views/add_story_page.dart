@@ -4,7 +4,6 @@ import 'package:soma/features/add_story_page/viewmodels/add_story_viewmodel.dart
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Import the new widgets
 import 'package:soma/features/add_story_page/widgets/add_story_app_bar.dart';
 import 'package:soma/features/add_story_page/widgets/publish_save_row.dart';
 import 'package:soma/features/add_story_page/widgets/story_title_input.dart';
@@ -32,31 +31,34 @@ class AddStoryPage extends StatelessWidget {
               children: [
                 viewModel.isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            PublishSaveRow(viewModel: viewModel),
-                            const SizedBox(height: 16.0),
-                            StoryTitleInput(viewModel: viewModel),
-                            const SizedBox(height: 16.0),
-                            if (viewModel.availableTags.isNotEmpty)
-                              TagSelectionSection(viewModel: viewModel),
-                            const SizedBox(height: 16.0),
-                            TextManipulationToolbar(viewModel: viewModel),
-                            const SizedBox(height: 16.0),
-                            StoryContentEditor(viewModel: viewModel),
-                          ],
+                    : SingleChildScrollView( // The fix: Wrap the Column with SingleChildScrollView
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            children: [
+                              PublishSaveRow(viewModel: viewModel),
+                              const SizedBox(height: 16.0),
+                              StoryTitleInput(viewModel: viewModel),
+                              const SizedBox(height: 16.0),
+                              if (viewModel.availableTags.isNotEmpty)
+                                TagSelectionSection(viewModel: viewModel),
+                              const SizedBox(height: 16.0),
+                              TextManipulationToolbar(viewModel: viewModel),
+                              const SizedBox(height: 16.0),
+                              // StoryContentEditor is now inside a scrollable view
+                              StoryContentEditor(viewModel: viewModel),
+                            ],
+                          ),
                         ),
                       ),
                 if (viewModel.showShareOptions)
                   ModalBarrier(
-                    dismissible: false, // Prevent dismissing by tapping outside
-                    color: Colors.black.withOpacity(0.5), // Semi-transparent black
+                    dismissible: false,
+                    color: Colors.black.withOpacity(0.5),
                   ),
                 if (viewModel.showShareOptions)
                   Align(
-                    alignment: Alignment.center, // Center the widget
+                    alignment: Alignment.center,
                     child: FloatingShareOptions(viewModel: viewModel),
                   ),
               ],

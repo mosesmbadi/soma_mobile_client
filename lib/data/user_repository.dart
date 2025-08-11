@@ -83,4 +83,19 @@ Future<bool> requestWriterAccess(String token) async {
       throw Exception('An error occurred while fetching recent reads: $e');
     }
   }
+
+  Future<Map<String, dynamic>> getUserById(String userId) async {
+    final String userApiUrl = '${Environment.backendUrl}/api/users/$userId';
+    try {
+      final response = await _client.get(Uri.parse(userApiUrl));
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load user details for ID $userId: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('An error occurred while fetching user details for ID $userId: $e');
+    }
+  }
 }
