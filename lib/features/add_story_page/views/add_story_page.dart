@@ -31,7 +31,7 @@ class AddStoryPage extends StatelessWidget {
               children: [
                 viewModel.isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : SingleChildScrollView( // The fix: Wrap the Column with SingleChildScrollView
+                    : SingleChildScrollView(
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
@@ -40,6 +40,10 @@ class AddStoryPage extends StatelessWidget {
                               const SizedBox(height: 16.0),
                               StoryTitleInput(viewModel: viewModel),
                               const SizedBox(height: 16.0),
+                              // Show the tag selection section only if there are available tags
+                              // will cause issues if no tags are available
+                              // TODO: In production tags MUST be available, that is not promised however
+                              //and might cause silent bug
                               if (viewModel.availableTags.isNotEmpty)
                                 TagSelectionSection(viewModel: viewModel),
                               const SizedBox(height: 16.0),

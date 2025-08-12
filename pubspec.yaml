@@ -34,6 +34,13 @@ dev_dependencies:
   mockito: ^5.4.4
   build_runner: ^2.4.9
   build_test: ^2.2.2
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/soma_logo.png"
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import for MethodChannel
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:soma/data/user_repository.dart';
 import 'package:soma/data/story_repository.dart';
@@ -12,80 +13,62 @@ import 'package:http/http.dart' as http;
 import 'dart:io'; // For HttpOverrides
 
 // Mock classes for dependencies
-class MockUserRepository extends Mock implements UserRepository {}
+class MockUserRepository extends Mock implements UserRepository {
+  @override
+  Future<Map<String, dynamic>> getCurrentUserDetails() {
+    return super.noSuchMethod(
+      Invocation.method(#getCurrentUserDetails, []),
+      returnValue: Future.value({'_id': 'default_id', 'tokens': 0}),
+    );
+  }
+
+  @override
+  Future<Map<String, dynamic>> getUserById(String userId) {
+    return super.noSuchMethod(
+      Invocation.method(#getUserById, [userId]),
+      returnValue: Future.value({'_id': 'default_author_id', 'name': 'Default Author'}),
+    );
+  }
+}
 class MockStoryRepository extends Mock implements StoryRepository {}
-class MockSharedPreferences extends Mock implements SharedPreferences {}
 class MockHttpClient extends Mock implements http.Client {}
 
 void main() {
-  late MockUserRepository mockUserRepository;
-  late MockStoryRepository mockStoryRepository;
-  late MockSharedPreferences mockSharedPreferences;
-  late MockHttpClient mockHttpClient;
+  group('StoryDetailPage Author Navigation', () {
+    late MockUserRepository mockUserRepository;
+    late MockStoryRepository mockStoryRepository;
+    late MockHttpClient mockHttpClient;
 
-  setUpAll(() {
-    TestWidgetsFlutterBinding.ensureInitialized();
-    HttpOverrides.global = null; // Prevent actual HTTP requests
+    setUpAll(() {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      SharedPreferences.setMockInitialValues({'jwt_token': 'dummy_token'});
 
-    // Mock SharedPreferences platform channel to prevent MissingPluginException
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-      const MethodChannel('plugins.flutter.io/shared_preferences'),
-      (MethodCall methodCall) async {
-        if (methodCall.method == 'getAll') {
-          return <String, dynamic>{};
-        }
-        if (methodCall.method == 'getString') {
-          // Handle getString calls, e.g., for 'jwt_token'
-          if (methodCall.arguments['key'] == 'jwt_token') {
-            return 'dummy_token';
-          }
-        }
-        // Return null for any other unhandled methods
-        return null;
-      },
-    );
-  });
+      mockUserRepository = MockUserRepository(); // Initialize here
+      mockStoryRepository = MockStoryRepository(); // Initialize here
+      mockHttpClient = MockHttpClient(); // Initialize here
 
-  setUp(() {
-    mockUserRepository = MockUserRepository();
-    mockStoryRepository = MockStoryRepository();
-    mockSharedPreferences = MockSharedPreferences();
-    mockHttpClient = MockHttpClient();
+      // Mock user details for StoryDetailPage's _fetchCurrentUserTokens
+      when((mockUserRepository as UserRepository).getCurrentUserDetails()).thenAnswer((_) async => {
+            '_id': 'current_user_id',
+            'tokens': 10,
+          });
 
-    // Reset mocks before each test
-    reset(mockUserRepository);
-    reset(mockStoryRepository);
-    reset(mockSharedPreferences);
-    reset(mockHttpClient);
+      // Mock author details for AuthorProfileViewModel
+      when(mockUserRepository.getUserById('author_123')).thenAnswer((_) async => {
+            '_id': 'author_123',
+            'name': 'Test Author',
+          });
 
-    // Mock SharedPreferences.getInstance() to return our mock instance
-    // This is crucial for widgets that call SharedPreferences.getInstance()
-    when(SharedPreferences.getInstance()).thenAnswer((_) async => mockSharedPreferences);
+      // Mock author stories for AuthorProfileViewModel
+      when(mockStoryRepository.getStoriesByAuthor('author_123')).thenAnswer((_) async => [
+            {'_id': 'story_1', 'title': 'Author Story 1', 'author': {'_id': 'author_123', 'name': 'Test Author'}, 'tags': []},
+            {'_id': 'story_2', 'title': 'Author Story 2', 'author': {'_id': 'author_123', 'name': 'Test Author'}, 'tags': []},
+          ]);
+    });
 
-    // Mock SharedPreferences.getString for jwt_token
-    when(mockSharedPreferences.getString('jwt_token')).thenReturn('dummy_token');
-
-    // Mock user details for StoryDetailPage's _fetchCurrentUserTokens
-    when(mockUserRepository.getCurrentUserDetails()).thenAnswer((_) async => {
-          '_id': 'current_user_id',
-          'tokens': 10,
-        });
-
-    // Mock story unlock status for StoryDetailPage
-    when(mockStoryRepository.isStoryUnlocked(any as String, any as String)).thenAnswer((_) async => true);
-
-    // Mock author details for AuthorProfileViewModel
-    when(mockUserRepository.getUserById(any as String)).thenAnswer((_) async => {
-          '_id': 'author_123',
-          'name': 'Test Author',
-        });
-
-    // Mock author stories for AuthorProfileViewModel
-    when(mockStoryRepository.getStoriesByAuthor(any as String)).thenAnswer((_) async => [
-          {'_id': 'story_1', 'title': 'Author Story 1', 'author': {'_id': 'author_123', 'name': 'Test Author'}, 'tags': []},
-          {'_id': 'story_2', 'title': 'Author Story 2', 'author': {'_id': 'author_123', 'name': 'Test Author'}, 'tags': []},
-        ]);
-  });
+    setUp(() {
+      // No need to re-initialize here, they are already initialized in setUpAll
+    });
 
   group('StoryDetailPage Author Navigation', () {
     Widget createStoryDetailPage({required Map<String, dynamic> story}) {
@@ -93,7 +76,6 @@ void main() {
         providers: [
           Provider<UserRepository>.value(value: mockUserRepository),
           Provider<StoryRepository>.value(value: mockStoryRepository),
-          Provider<SharedPreferences>.value(value: mockSharedPreferences),
           Provider<http.Client>.value(value: mockHttpClient),
         ],
         child: MaterialApp(
