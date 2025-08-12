@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soma/core/utils/quill_utils.dart';
 
 class StoryCardGrid extends StatelessWidget {
   final Map<String, dynamic> story;
@@ -13,24 +14,28 @@ class StoryCardGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String title = story['title'] ?? 'No Title';
-    final String authorName = story['author']?['name'] ?? 'Unknown Author';
+    final dynamic authorData = story['author'];
+    final String authorName = (authorData is Map<String, dynamic>)
+        ? authorData['name'] ?? 'Unknown Author'
+        : (authorData is String)
+            ? authorData
+            : 'Unknown Author';
     final String thumbnailUrl = story['thumbnailUrl'] ?? '';
-    final String contentSnippet = story['content']?.split('\n').first ?? '';
-    final int reads = story['reads'] ?? 0;
+    final String contentSnippet = QuillUtils.extractPlainText(story['content'] ?? '[]', maxLength: 100);
+
+    final int reads = story['reads'] ?? story['readCount'] ?? story['views'] ?? 0;
     final double rating = (story['rating'] ?? 4.5).toDouble();
 
     return GestureDetector(
       onTap: onTap,
       child: AspectRatio(
-        // A value of 1 gives a square card.
-        aspectRatio: 1, 
+        aspectRatio: 1,
         child: Card(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           clipBehavior: Clip.antiAlias,
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Background image
               thumbnailUrl.isNotEmpty
                   ? Image.network(
                       thumbnailUrl,
@@ -41,15 +46,13 @@ class StoryCardGrid extends StatelessWidget {
                       ),
                     )
                   : Container(color: Colors.grey[300]),
-
-              // Gradient overlay for better text visibility
               Positioned.fill(
                 child: Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        const Color.fromRGBO(0, 0, 0, 0.7),
-                        const Color.fromRGBO(0, 0, 0, 0.0),
+                        Color.fromRGBO(0, 0, 0, 0.7),
+                        Color.fromRGBO(0, 0, 0, 0.0),
                       ],
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
@@ -57,8 +60,6 @@ class StoryCardGrid extends StatelessWidget {
                   ),
                 ),
               ),
-
-              // Text content
               Positioned(
                 bottom: 12,
                 left: 12,
@@ -89,10 +90,29 @@ class StoryCardGrid extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: 6),
-                    // Combined metadata into a single Row
+                    // Display Tags
+                    if (story['tags'] != null && story['tags'].isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4.0),
+                        child: Wrap(
+                          spacing: 6.0,
+                          runSpacing: 0.0,
+                          children: (story['tags'] as List<dynamic>).map((tag) {
+                            final Map<String, dynamic> tagMap = tag as Map<String, dynamic>;
+                            return Chip(
+                              label: Text(
+                                tagMap['name'],
+                                style: const TextStyle(fontSize: 10, color: Colors.white),
+                              ),
+                              backgroundColor: Colors.blueGrey.withOpacity(0.7),
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     Row(
                       children: [
-                        // Author name
                         Expanded(
                           child: Text(
                             'By $authorName',
@@ -103,7 +123,6 @@ class StoryCardGrid extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        // Reads and rating
                         const Icon(Icons.visibility, color: Colors.white70, size: 16),
                         const SizedBox(width: 4),
                         Text(

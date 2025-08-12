@@ -8,13 +8,51 @@ import 'package:soma/features/my_stories_page/views/my_stories_page.dart';
 import 'package:soma/features/add_story_page/views/add_story_page.dart';
 import 'package:soma/core/widgets/bottom_nav.dart';
 import 'package:soma/features/registration_page/views/registration_page.dart';
+import 'package:soma/features/profile_page/views/profile_update_page.dart';
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soma/data/user_repository.dart'; // Import UserRepository
+import 'package:soma/data/story_repository.dart'; // Import StoryRepository
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final String? token = prefs.getString('jwt_token');
+  final bool? rememberMe = prefs.getBool('remember_me');
+
+  Widget defaultHome = const LandingPage();
+
+  if (token != null && rememberMe == true) {
+    defaultHome = const BottomNavShell();
+  }
+
+  runApp(
+    MultiProvider(
+      providers: [
+        Provider<http.Client>(create: (_) => http.Client()),
+        Provider<SharedPreferences>(create: (_) => prefs),
+        Provider<UserRepository>(
+          create: (context) => UserRepository(
+            prefs: Provider.of<SharedPreferences>(context, listen: false),
+            client: Provider.of<http.Client>(context, listen: false),
+          ),
+        ),
+        Provider<StoryRepository>(
+          create: (context) => StoryRepository(
+            client: Provider.of<http.Client>(context, listen: false),
+          ),
+        ),
+      ],
+      child: MyApp(defaultHome: defaultHome),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Widget defaultHome;
+
+  const MyApp({super.key, required this.defaultHome});
 
   @override
   Widget build(BuildContext context) {
@@ -23,20 +61,17 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         primarySwatch: Colors.blue,
-        textTheme: TextTheme(
-          displayLarge: const TextStyle(
-            fontSize: 72,
-            fontWeight: FontWeight.bold,
-          ),
-          titleLarge: GoogleFonts.roboto(
-            fontSize: 20,
-          ),
-          bodyMedium: GoogleFonts.roboto(),
-          displaySmall: GoogleFonts.pacifico(),
+        textTheme: GoogleFonts.robotoTextTheme(
+          Theme.of(context).textTheme.copyWith(
+                displayLarge: const TextStyle(
+                  fontSize: 72,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
         ),
       ),
 
-      home: const LandingPage(),
+      home: defaultHome,
       routes: {
         '/login': (context) => const LoginPage(),
         '/guest_stories': (context) => const GuestStoriesPage(),
@@ -45,6 +80,7 @@ class MyApp extends StatelessWidget {
         '/my_stories': (context) => const MyStoriesPage(),
         '/profile': (context) => const ProfilePage(),
         '/register': (context) => const RegistrationPage(),
+        '/profile_update': (context) => const ProfileUpdatePage(),
       },
     );
   }

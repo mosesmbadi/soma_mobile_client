@@ -67,7 +67,7 @@ class LandingPage extends StatelessWidget {
                           textAlign: TextAlign.center,
                           style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
-                        const SizedBox(height: 50),
+                        const SizedBox(height: 20),
                         SizedBox(
                           width: double
                               .infinity, // Full width of the parent (with padding)
@@ -89,7 +89,7 @@ class LandingPage extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 10),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -111,6 +111,7 @@ class LandingPage extends StatelessWidget {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 30),
                       ],
                     ),
                   ),

@@ -15,18 +15,32 @@ dependencies:
   http: ^1.2.1
   shared_preferences: ^2.2.3
   google_sign_in: ^6.2.1
-  flutter_quill: ^9.2.3
+  flutter_quill: ^11.4.1
+  flutter_quill_extensions: ^11.0.0
   image_picker: ^1.1.2
-  emoji_picker_flutter: ^2.2.0
+  emoji_picker_flutter: ^4.3.0
   flutter_keyboard_visibility: ^6.0.0
   provider: ^6.1.2
   google_fonts: ^6.2.1
   intl: ^0.20.2
+  youtube_player_flutter: ^9.1.1
+  another_flushbar: ^1.12.30
+  share_plus: ^7.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  mockito: ^5.4.4
+  build_runner: ^2.4.9
+  build_test: ^2.2.2
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/soma_logo.png"
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true
@@ -35,11 +49,4 @@ flutter:
     - assets/images/
     - assets/images/landing_page_hero1.jpg
     - assets/images/google_logo.png
-    - assets/images/stories/story1.jpg
-    - assets/images/stories/story2.jpg
-    - assets/images/stories/story3.jpg
-
-  fonts:
-    - family: PlaywriteQLD
-      fonts:
-        - asset: assets/google_fonts/static/PlaywriteAUQLD-Regular.ttf
+    - assets/images/default_thumbnail.jpg

@@ -1,187 +1,68 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
 import 'package:soma/features/add_story_page/viewmodels/add_story_viewmodel.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:soma/features/add_story_page/widgets/add_story_app_bar.dart';
+import 'package:soma/features/add_story_page/widgets/publish_save_row.dart';
+import 'package:soma/features/add_story_page/widgets/story_title_input.dart';
+import 'package:soma/features/add_story_page/widgets/tag_selection_section.dart';
+import 'package:soma/features/add_story_page/widgets/text_manipulation_toolbar.dart';
+import 'package:soma/features/add_story_page/widgets/story_content_editor.dart';
+import 'package:soma/features/add_story_page/widgets/floating_share_options.dart';
 
 class AddStoryPage extends StatelessWidget {
   const AddStoryPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    print('Building AddStoryPage');
     return ChangeNotifierProvider(
-      create: (_) => AddStoryViewModel(),
+      create: (context) => AddStoryViewModel(
+        httpClient: Provider.of<http.Client>(context, listen: false),
+        sharedPreferences: Provider.of<SharedPreferences>(context, listen: false),
+      ),
       child: Consumer<AddStoryViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('Add New Story'),
-              backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.pushNamed(context, '/home'),
-              ),
-            ),
-            body: viewModel.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Text(
-                              'Saving...',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Color.fromARGB(255, 48, 48, 48),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 16.0),
-                            // Removed Expanded here to make the button smaller
-                            ElevatedButton(
-                              onPressed: () => viewModel.publishStory(context),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xD1E4FFFF),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 10,
-                                ), // Reduced vertical padding
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                ),
-                              ),
-                              child: const Text(
-                                'Publish',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Color.fromARGB(255, 88, 88, 88),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 16.0),
-                        // Story Title
-                        TextField(
-                          controller: viewModel.titleController,
-                          decoration: InputDecoration(
-                            labelText: 'Story Title',
-                            hintText: 'Enter your story title',
-                            // filled: true,
-                            fillColor: const Color.fromARGB(255, 255, 255, 255),
-                          ),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-                        // container for text manipulations
-                        const SizedBox(height: 16.0),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 255, 255, 255),
-                            border: Border.all(
-                              width: 0.3,
-                              color: Colors.grey.shade300,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.format_bold),
-                                onPressed: viewModel.toggleBold,
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.format_italic),
-                                onPressed: viewModel.toggleItalic,
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.format_underline),
-                                onPressed: viewModel.toggleUnderline,
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.image),
-                                onPressed: viewModel.pickImage,
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.mood),
-                                onPressed: viewModel.pickImage,
-                              ),
-                              PopupMenuButton<String>(
-                                icon: const Icon(Icons.more_vert),
-                                onSelected: (value) {
-                                  if (value == 'strikethrough') {
-                                    viewModel.toggleStrikeThrough();
-                                  } else if (value == 'link') {
-                                    viewModel.toggleLink();
-                                  } else if (value == 'clear_formatting') {
-                                    viewModel.clearFormatting();
-                                  }
-                                },
-                                itemBuilder: (BuildContext context) =>
-                                    <PopupMenuEntry<String>>[
-                                      const PopupMenuItem<String>(
-                                        value: 'strikethrough',
-                                        child: Text('Strikethrough'),
-                                      ),
-                                      const PopupMenuItem<String>(
-                                        value: 'link',
-                                        child: Text('Link'),
-                                      ),
-                                      const PopupMenuItem<String>(
-                                        value: 'clear_formatting',
-                                        child: Text('Clear Formatting'),
-                                      ),
-                                    ],
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // story content
-                        const SizedBox(height: 16.0),
-                        Expanded(
+            appBar: const AddStoryAppBar(),
+            body: Stack(
+              children: [
+                viewModel.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : SingleChildScrollView( // The fix: Wrap the Column with SingleChildScrollView
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: QuillEditor.basic(
-                                    configurations: QuillEditorConfigurations(
-                                      controller: viewModel.controller,
-                                      readOnly: false,
-                                      placeholder: 'Story Content',
-                                    ),
-                                  ),
-                                ),
-                              ),
+                              PublishSaveRow(viewModel: viewModel),
+                              const SizedBox(height: 16.0),
+                              StoryTitleInput(viewModel: viewModel),
+                              const SizedBox(height: 16.0),
+                              if (viewModel.availableTags.isNotEmpty)
+                                TagSelectionSection(viewModel: viewModel),
+                              const SizedBox(height: 16.0),
+                              TextManipulationToolbar(viewModel: viewModel),
+                              const SizedBox(height: 16.0),
+                              // StoryContentEditor is now inside a scrollable view
+                              StoryContentEditor(viewModel: viewModel),
                             ],
                           ),
                         ),
-
-                        const SizedBox(height: 16.0),
-                        if (viewModel.errorMessage.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16.0),
-                            child: Text(
-                              viewModel.errorMessage,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 14.0,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                      ),
+                if (viewModel.showShareOptions)
+                  ModalBarrier(
+                    dismissible: false,
+                    color: Colors.black.withOpacity(0.5),
                   ),
+                if (viewModel.showShareOptions)
+                  Align(
+                    alignment: Alignment.center,
+                    child: FloatingShareOptions(viewModel: viewModel),
+                  ),
+              ],
+            ),
           );
         },
       ),

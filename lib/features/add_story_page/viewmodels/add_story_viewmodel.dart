@@ -1,49 +1,148 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Import for Clipboard
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soma/core/services/image_upload_service.dart';
+import '../../../core/config/environment.dart';
 
-import '../../../core/config/environment.dart'; // Corrected import path
-
-const String apiUrl = '${Environment.backendUrl}/api/stories'; // Moved to top-level
+const String apiUrl = '${Environment.backendUrl}/api/stories';
+const String tagsApiUrl = '${Environment.backendUrl}/api/stories/tags';
 
 class AddStoryViewModel extends ChangeNotifier {
   final QuillController _controller = QuillController.basic();
   final TextEditingController _titleController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
+
   String _errorMessage = '';
   bool _isLoading = false;
 
+  String? _thumbnailUrl;
+
+  List<dynamic> _availableTags = [];
+  List<String> _selectedTagIds = [];
+  String _tagsErrorMessage = '';
+
+  String? _publishedStoryUrl;
+  bool _showShareOptions = false;
+
+  // Getters
   QuillController get controller => _controller;
   TextEditingController get titleController => _titleController;
   String get errorMessage => _errorMessage;
   bool get isLoading => _isLoading;
+  FocusNode get focusNode => _focusNode;
+  ScrollController get scrollController => _scrollController;
+  String? get thumbnailUrl => _thumbnailUrl;
+  List<dynamic> get availableTags => _availableTags;
+  List<String> get selectedTagIds => _selectedTagIds;
+  String get tagsErrorMessage => _tagsErrorMessage;
 
-  AddStoryViewModel() {
+  String? get publishedStoryUrl => _publishedStoryUrl;
+  bool get showShareOptions => _showShareOptions;
+
+  final http.Client _httpClient;
+  final SharedPreferences _sharedPreferences; // Make it final
+
+  AddStoryViewModel({http.Client? httpClient, required SharedPreferences sharedPreferences}) // Require SharedPreferences
+      : _httpClient = httpClient ?? http.Client(),
+        _sharedPreferences = sharedPreferences { // Initialize directly
     _loadSavedStory();
+    _fetchTags();
   }
 
   @override
   void dispose() {
     _controller.dispose();
     _titleController.dispose();
+    _focusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
+  void displayShareOptions() { // Renamed method
+    _showShareOptions = true;
+    notifyListeners();
+  }
+
+  void hideShareOptions() {
+    _showShareOptions = false;
+    _publishedStoryUrl = null; // Clear URL when hiding
+    notifyListeners();
+  }
+
+  Future<void> _fetchTags() async {
+    print('Entering _fetchTags()');
+    _isLoading = true;
+    _tagsErrorMessage = '';
+    notifyListeners();
+
+    try {
+      final String? token = _sharedPreferences.getString('jwt_token');
+      print('Fetching tags. Token: $token, API URL: $tagsApiUrl');
+
+      if (token == null) {
+        _tagsErrorMessage = 'Authentication token not found. Cannot fetch tags.';
+        _isLoading = false;
+        notifyListeners();
+        print('Tags fetch failed: Authentication token not found.');
+        return;
+      }
+
+      final response = await _httpClient.get(
+        Uri.parse(tagsApiUrl),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      print('Tags API response status: ${response.statusCode}');
+      print('Tags API response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        _availableTags = jsonDecode(response.body);
+        print('Available tags: $_availableTags');
+      } else {
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        _tagsErrorMessage = errorData['message'] ?? 'Failed to fetch tags.';
+        print('Tags fetch failed: $_tagsErrorMessage');
+      }
+    } catch (e) {
+      _tagsErrorMessage = 'An error occurred while fetching tags: $e';
+      print('Tags fetch failed with exception: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void toggleTagSelection(String tagId) {
+    if (_selectedTagIds.contains(tagId)) {
+      _selectedTagIds.remove(tagId);
+    } else {
+      if (_selectedTagIds.length < 3) {
+        _selectedTagIds.add(tagId);
+      } else {
+        _tagsErrorMessage = 'You can select a maximum of 3 tags.';
+      }
+    }
+    notifyListeners();
+  }
+
   Future<void> _loadSavedStory() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? savedTitle = prefs.getString('draft_story_title');
-    final String? savedContent = prefs.getString('draft_story_content');
+    final String? savedTitle = _sharedPreferences.getString('draft_story_title');
+    final String? savedContent = _sharedPreferences.getString('draft_story_content');
 
     if (savedTitle != null && savedContent != null) {
       _titleController.text = savedTitle;
       try {
         _controller.document = Document.fromJson(jsonDecode(savedContent));
       } catch (e) {
-        
         _controller.document = Document();
       }
     }
@@ -56,9 +155,8 @@ class AddStoryViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('draft_story_title', _titleController.text);
-      await prefs.setString(
+      await _sharedPreferences.setString('draft_story_title', _titleController.text);
+      await _sharedPreferences.setString(
         'draft_story_content',
         jsonEncode(_controller.document.toDelta().toJson()),
       );
@@ -89,8 +187,14 @@ class AddStoryViewModel extends ChangeNotifier {
       return;
     }
 
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? token = prefs.getString('jwt_token');
+    if (_selectedTagIds.isEmpty || _selectedTagIds.length > 3) {
+      _errorMessage = 'Please select between 1 and 3 tags.';
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+
+    final String? token = _sharedPreferences.getString('jwt_token');
 
     if (token == null) {
       _errorMessage = 'No authentication token found. Please log in.';
@@ -98,24 +202,30 @@ class AddStoryViewModel extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    
+    List<Map<String, dynamic>> docOperations = _controller.document.toDelta().toJson();
+    List<Map<String, dynamic>> modifiedDocOperations = [];
 
-    // Extract image URLs from Quill content
-    final List<String> bodyImageUrls = [];
-    String? thumbnailUrl;
-
-    final docJson = _controller.document.toDelta().toJson();
-    for (var op in docJson) {
+    for (var op in docOperations) {
       if (op['insert'] is Map && op['insert'].containsKey('image')) {
         final imageUrl = op['insert']['image'];
-        bodyImageUrls.add(imageUrl);
-        if (thumbnailUrl == null) {
-          thumbnailUrl = imageUrl; // Set the first image as thumbnail
+
+        if (_thumbnailUrl == null) { // This is the first image found
+          _thumbnailUrl = imageUrl;
+          // Do NOT add this operation to modifiedDocOperations, effectively removing it from the content
+          continue; // Skip to the next operation
         }
       }
+      modifiedDocOperations.add(op); // Add all other operations
     }
 
+    // If no image was found in the document, thumbnailUrl remains null.
+    // In this case, the content will be the original document content.
+    // If an image was found and removed, the content will be the modified document.
+    final String contentToSend = jsonEncode(modifiedDocOperations);
+
     try {
-      final response = await http.post(
+      final response = await _httpClient.post(
         Uri.parse(apiUrl),
         headers: <String, String>{
           'Authorization': 'Bearer $token',
@@ -123,21 +233,22 @@ class AddStoryViewModel extends ChangeNotifier {
         },
         body: jsonEncode({
           'title': title,
-          'content': content,
+          'content': contentToSend,
           'thumbnailUrl': thumbnailUrl,
-          'bodyImageUrls': bodyImageUrls,
+          'tags': _selectedTagIds, 
         }),
       );
 
       if (response.statusCode == 201) {
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Story published successfully!')),
-        );
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        _publishedStoryUrl = responseData['storyUrl']; // Assuming backend returns 'storyUrl'
+        
         _titleController.clear();
         _controller.clear();
-        await prefs.remove('draft_story_title');
-        await prefs.remove('draft_story_content');
+        _selectedTagIds.clear();
+        await _sharedPreferences.remove('draft_story_title');
+        await _sharedPreferences.remove('draft_story_content');
+        displayShareOptions(); // Show share options after success
       } else {
         final Map<String, dynamic> errorData = jsonDecode(response.body);
         _errorMessage = errorData['message'] ?? 'Failed to publish story.';
@@ -150,6 +261,7 @@ class AddStoryViewModel extends ChangeNotifier {
     }
   }
 
+  // Formatting Controls
   void toggleBold() {
     _controller.formatSelection(Attribute.bold);
   }
@@ -167,7 +279,6 @@ class AddStoryViewModel extends ChangeNotifier {
   }
 
   void toggleLink() {
-    // This is a simplified toggle. A real link button would open a dialog to get the URL.
     _controller.formatSelection(Attribute.link);
   }
 
@@ -180,7 +291,6 @@ class AddStoryViewModel extends ChangeNotifier {
     _controller.formatSelection(Attribute.clone(Attribute.italic, null));
     _controller.formatSelection(Attribute.clone(Attribute.underline, null));
     _controller.formatSelection(Attribute.clone(Attribute.strikeThrough, null));
-    _controller.formatSelection(Attribute.clone(Attribute.link, null));
     _controller.formatSelection(Attribute.clone(Attribute.align, null));
     _controller.formatSelection(Attribute.clone(Attribute.direction, null));
     _controller.formatSelection(Attribute.clone(Attribute.list, null));
