@@ -45,7 +45,7 @@ Future<bool> requestWriterAccess(String token) async {
     final uri = Uri.parse(
       '${Environment.backendUrl}/api/users/writer-request',
     );
-    final response = await _client.post(
+    final response = await http.post(
       uri,
       headers: <String, String>{
         'Authorization': 'Bearer $token',
@@ -99,3 +99,4 @@ Future<bool> requestWriterAccess(String token) async {
     }
   }
 }
+
