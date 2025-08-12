@@ -7,6 +7,7 @@ class MyStoriesViewModel extends ChangeNotifier {
   List<dynamic> _myStories = [];
   String _errorMessage = '';
   bool _isLoading = true;
+  bool _disposed = false;
 
   List<dynamic> get myStories => _myStories;
   String get errorMessage => _errorMessage;
@@ -14,6 +15,19 @@ class MyStoriesViewModel extends ChangeNotifier {
 
   MyStoriesViewModel() {
     fetchMyStories();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) {
+      super.notifyListeners();
+    }
   }
 
   Future<void> fetchMyStories() async {

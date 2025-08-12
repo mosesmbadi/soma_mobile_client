@@ -40,7 +40,7 @@ class UserRepository {
   }
 
 
-Future<bool> requestWriterAccess(String token) async {
+Future<Map<String, dynamic>> requestWriterAccess(String token) async {
   try {
     final uri = Uri.parse(
       '${Environment.backendUrl}/api/users/writer-request',
@@ -53,11 +53,14 @@ Future<bool> requestWriterAccess(String token) async {
         'Content-Type': 'application/json; charset=UTF-8',
       },
     );
-    return response.statusCode == 200;
+    final responseBody = jsonDecode(response.body);
+    final bool success = response.statusCode == 200 || response.statusCode == 201;
+    final String message = responseBody['message'] ?? responseBody['error'] ?? (success ? 'Request successful' : 'Failed to send request.');
+    return {'success': success, 'message': message};
   } catch (e) {
     // Log the error to understand what's happening
     print('Error making writer access request: $e');
-    return false;
+    return {'success': false, 'message': 'An error occurred.'};
   }
 }
 

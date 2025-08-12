@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:soma/features/home_page/viewmodels/home_page_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soma/core/widgets/show_toast.dart';
 import 'package:soma/data/user_repository.dart';
 
 import 'package:soma/features/my_stories_page/views/my_stories_page.dart';
@@ -142,15 +143,15 @@ class _BottomNavShellState extends State<BottomNavShell> {
               child: const Text('Request Writer Access'),
               onPressed: () async {
                 Navigator.pop(context); // Close dialog
-                // Or directly call the request writer access method if available globally
-                final success = await _userRepository.requestWriterAccess(
+                final result = await _userRepository.requestWriterAccess(
                     _prefs.getString('jwt_token') ?? '');
-                final message = success
-                    ? 'Request sent successfully!'
-                    : 'Failed to send request.';
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(message)),
-                );
+                final bool success = result['success'] as bool;
+                final String message = result['message'] as String;
+                if (success) {
+                  showToast(context, message, type: ToastType.success);
+                } else {
+                  showToast(context, message, type: ToastType.error);
+                }
               },
             ),
             TextButton(

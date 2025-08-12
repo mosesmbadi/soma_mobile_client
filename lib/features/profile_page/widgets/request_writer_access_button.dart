@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:soma/core/widgets/show_toast.dart';
 import 'package:soma/features/profile_page/viewmodels/profile_page_viewmodel.dart';
 
 class RequestWriterAccessButton extends StatelessWidget {
@@ -23,13 +24,15 @@ class RequestWriterAccessButton extends StatelessWidget {
             foregroundColor: Colors.white,
           ),
           onPressed: () async {
-            final success = await viewModel.requestWriterAccess();
-            final message = success
-                ? 'Request sent successfully!'
-                : 'Failed to send request.';
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(message)),
-            );
+            final result = await viewModel.requestWriterAccess();
+            final bool success = result['success'] as bool;
+            final String message = result['message'] as String;
+
+            if (success) {
+              showToast(context, message, type: ToastType.success);
+            } else {
+              showToast(context, message, type: ToastType.error);
+            }
           },
         ),
       );

@@ -42,12 +42,10 @@ class ProfilePageViewModel extends ChangeNotifier {
     fetchUserData();
   }
 
-  Future<bool> requestWriterAccess() async {
+  Future<Map<String, dynamic>> requestWriterAccess() async {
     final String? token = _prefs.getString('jwt_token');
     if (token == null) {
-      _errorMessage = 'No authentication token found. Please log in.';
-      notifyListeners();
-      return false;
+      return {'success': false, 'message': 'No authentication token found. Please log in.'};
     }
     return await _userRepository.requestWriterAccess(token);
   }
