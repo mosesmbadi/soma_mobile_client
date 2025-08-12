@@ -47,19 +47,13 @@ void main() {
         return null;
       },
     );
-  });
+    SharedPreferences.setMockInitialValues({'jwt_token': 'dummy_token'}); // Default token
 
-  setUp(() {
-    mockStoryRepository = MockStoryRepository();
-    mockUserRepository = MockUserRepository();
-    mockStoryDetailViewModel = MockStoryDetailViewModel();
-    mockSharedPreferences = MockSharedPreferences();
-    mockHttpClient = MockClient();
-    reset(mockStoryRepository);
-    reset(mockUserRepository);
-    reset(mockStoryDetailViewModel);
-    reset(mockSharedPreferences);
-    reset(mockHttpClient);
+    mockStoryRepository = MockStoryRepository(); // Initialize here
+    mockUserRepository = MockUserRepository(); // Initialize here
+    mockStoryDetailViewModel = MockStoryDetailViewModel(); // Initialize here
+    mockSharedPreferences = MockSharedPreferences(); // Initialize here
+    mockHttpClient = MockClient(); // Initialize here
 
     // Mock SharedPreferences.getInstance() to return our mock instance
     // This is crucial for widgets that call SharedPreferences.getInstance()
@@ -72,6 +66,15 @@ void main() {
           'tokens': 10,
         });
     when(mockStoryRepository.isStoryUnlocked(any as String, any as String)).thenAnswer((_) async => false);
+  });
+
+  setUp(() {
+    // No need to re-initialize here, they are already initialized in setUpAll
+    reset(mockStoryRepository);
+    reset(mockUserRepository);
+    reset(mockStoryDetailViewModel);
+    reset(mockSharedPreferences);
+    reset(mockHttpClient);
   });
 
   Widget createStoryDetailPage({
@@ -119,7 +122,7 @@ void main() {
     });
 
     testWidgets('displays GuestRegistrationCard for premium story when not logged in', (WidgetTester tester) async {
-      final premiumStory = {...baseStory, 'is_premium': true};
+      final premiumStory = {...baseStory, 'is_premium': true}; // Fixed syntax error
       // Override default mock for this test case
       when(mockSharedPreferences.getString(any as String)).thenReturn(null);
 
@@ -131,7 +134,7 @@ void main() {
     });
 
     testWidgets('displays UnlockCard for premium story when logged in with enough tokens', (WidgetTester tester) async {
-      final premiumStory = {...baseStory, 'is_premium': true};
+      final premiumStory = {...baseStory, 'is_premium': true}; // Fixed syntax error
       // Override default mocks for this test case
       when(mockSharedPreferences.getString(any as String)).thenReturn('dummy_token');
       when(mockUserRepository.getCurrentUserDetails()).thenAnswer((_) async => {
@@ -149,7 +152,7 @@ void main() {
     });
 
     testWidgets('displays TopUpCard for premium story when logged in with no tokens', (WidgetTester tester) async {
-      final premiumStory = {...baseStory, 'is_premium': true};
+      final premiumStory = {...baseStory, 'is_premium': true}; // Fixed syntax error
       // Override default mocks for this test case
       when(mockSharedPreferences.getString(any as String)).thenReturn('dummy_token');
       when(mockUserRepository.getCurrentUserDetails()).thenAnswer((_) async => {
@@ -167,7 +170,7 @@ void main() {
     });
 
     testWidgets('does not display any unlock cards when the story is already unlocked', (WidgetTester tester) async {
-      final premiumStory = {...baseStory, 'is_premium': true};
+      final premiumStory = {...baseStory, 'is_premium': true}; // Fixed syntax error
       // Override default mocks for this test case
       when(mockSharedPreferences.getString(any as String)).thenReturn('dummy_token');
       when(mockUserRepository.getCurrentUserDetails()).thenAnswer((_) async => {

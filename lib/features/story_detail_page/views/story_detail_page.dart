@@ -37,6 +37,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
   void initState() {
     super.initState();
     _httpClient = http.Client(); // Initialize http client
+    
     _initializeDependencies().then((_) {
       // After dependencies are initialized, fetch data
       _initializeData();

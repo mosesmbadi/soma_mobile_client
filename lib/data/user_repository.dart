@@ -2,6 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/config/environment.dart';
+import '../core/exceptions/auth_exception.dart'; // Import the custom exception
 
 class UserRepository {
   final http.Client _client;
@@ -12,8 +13,16 @@ class UserRepository {
     : _client = client ?? http.Client(),
       _prefs = prefs;
 
+  // Helper method to check for 401 and throw AuthException
+  void _checkResponseForErrors(http.Response response) {
+    if (response.statusCode == 401) {
+      throw AuthException('Unauthorized: Invalid or expired token.');
+    }
+  }
+
   // from wt token
   Future<Map<String, dynamic>> getCurrentUserDetails() async {
+    print('getCurrentUserDetails called in real UserRepository');
     final String? token = _prefs.getString('jwt_token');
 
     if (token == null) {
@@ -29,12 +38,18 @@ class UserRepository {
         },
       );
 
+      _checkResponseForErrors(response); // Check for 401
+
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
         throw Exception('Failed to load user details: ${response.statusCode}');
       }
     } catch (e) {
+      // Re-throw AuthException, otherwise wrap other exceptions
+      if (e is AuthException) {
+        rethrow;
+      }
       throw Exception('An error occurred while fetching user details: $e');
     }
   }
@@ -53,11 +68,18 @@ Future<Map<String, dynamic>> requestWriterAccess(String token) async {
         'Content-Type': 'application/json; charset=UTF-8',
       },
     );
+
+    _checkResponseForErrors(response); // Check for 401
+
     final responseBody = jsonDecode(response.body);
     final bool success = response.statusCode == 200 || response.statusCode == 201;
     final String message = responseBody['message'] ?? responseBody['error'] ?? (success ? 'Request successful' : 'Failed to send request.');
     return {'success': success, 'message': message};
   } catch (e) {
+    // Re-throw AuthException, otherwise wrap other exceptions
+    if (e is AuthException) {
+      rethrow;
+    }
     // Log the error to understand what's happening
     print('Error making writer access request: $e');
     return {'success': false, 'message': 'An error occurred.'};
@@ -76,6 +98,8 @@ Future<Map<String, dynamic>> requestWriterAccess(String token) async {
         },
       );
 
+      _checkResponseForErrors(response); // Check for 401
+
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         return data.cast<Map<String, dynamic>>();
@@ -83,6 +107,10 @@ Future<Map<String, dynamic>> requestWriterAccess(String token) async {
         throw Exception('Failed to load recent reads: ${response.statusCode}');
       }
     } catch (e) {
+      // Re-throw AuthException, otherwise wrap other exceptions
+      if (e is AuthException) {
+        rethrow;
+      }
       throw Exception('An error occurred while fetching recent reads: $e');
     }
   }
@@ -92,12 +120,18 @@ Future<Map<String, dynamic>> requestWriterAccess(String token) async {
     try {
       final response = await _client.get(Uri.parse(userApiUrl));
 
+      _checkResponseForErrors(response); // Check for 401
+
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
         throw Exception('Failed to load user details for ID $userId: ${response.statusCode}');
       }
     } catch (e) {
+      // Re-throw AuthException, otherwise wrap other exceptions
+      if (e is AuthException) {
+        rethrow;
+      }
       throw Exception('An error occurred while fetching user details for ID $userId: $e');
     }
   }

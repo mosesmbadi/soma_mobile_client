@@ -4,6 +4,7 @@ import 'package:soma/features/home_page/viewmodels/home_page_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soma/core/widgets/show_toast.dart';
 import 'package:soma/data/user_repository.dart';
+import 'package:soma/core/exceptions/auth_exception.dart';
 
 import 'package:soma/features/my_stories_page/views/my_stories_page.dart';
 import 'package:soma/features/add_story_page/views/add_story_page.dart';
@@ -86,14 +87,24 @@ class _BottomNavShellState extends State<BottomNavShell> {
                           unselectedItemColor: Colors.grey,
                           onTap: (index) async {
                             if (index == 2) {
-                              // Check user role before navigating to AddStoryPage
-                              final userDetails = await _userRepository.getCurrentUserDetails();
-                              final userRole = userDetails['role'];
+                              try {
+                                // Check user role before navigating to AddStoryPage
+                                final userDetails = await _userRepository.getCurrentUserDetails();
+                                final userRole = userDetails['role'];
 
-                              if (userRole == 'reader') {
-                                _showAccessDeniedDialog(context);
-                              } else {
-                                Navigator.pushNamed(context, '/add_story');
+                                if (userRole == 'reader') {
+                                  _showAccessDeniedDialog(context);
+                                } else {
+                                  Navigator.pushNamed(context, '/add_story');
+                                }
+                              } on AuthException catch (e) {
+                                // If token is invalid or expired, redirect to login page
+                                print('AuthException: $e');
+                                await _prefs.remove('jwt_token'); // Clear token
+                                Navigator.pushReplacementNamed(context, '/login');
+                              } catch (e) {
+                                // Handle other errors
+                                print('An error occurred: $e');
                               }
                             } else {
                               viewModel.onItemTapped(index);
