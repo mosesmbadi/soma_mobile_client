@@ -17,10 +17,11 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin {
   late SharedPreferences _prefs;
   late ProfilePageViewModel _viewModel;
   bool _isInitialized = false;
+  TabController? _tabController;
 
   @override
   void initState() {
@@ -31,9 +32,42 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _initializeData() async {
     _prefs = await SharedPreferences.getInstance();
     _viewModel = ProfilePageViewModel(prefs: _prefs);
-    setState(() {
-      _isInitialized = true;
-    });
+    _viewModel.addListener(_handleViewModelChanges);
+    _handleViewModelChanges();
+    if (mounted) {
+      setState(() {
+        _isInitialized = true;
+      });
+    }
+  }
+
+  void _handleViewModelChanges() {
+    if (!mounted) return;
+    final isWriter = _viewModel.userData?['role'] == 'writer';
+    if (isWriter) {
+      if (_tabController == null) {
+        _tabController = TabController(length: 3, vsync: this);
+        _tabController!.addListener(() {
+          if (mounted) {
+            setState(() {});
+          }
+        });
+        setState(() {});
+      }
+    } else {
+      if (_tabController != null) {
+        _tabController?.dispose();
+        _tabController = null;
+        setState(() {});
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _viewModel.removeListener(_handleViewModelChanges);
+    _tabController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -72,9 +106,30 @@ class _ProfilePageState extends State<ProfilePage> {
                         ProfileInfoSection(viewModel: viewModel),
                         const SizedBox(height: 10),
                         ProfileActionButtons(viewModel: viewModel),
-                        RequestWriterAccessButton(),
-                        const SizedBox(height: 10),
-                        ProfileStoryListSection(),
+                        if (_viewModel.userData?['role'] == 'writer' && _tabController != null) ...[
+                          const SizedBox(height: 20),
+                          TabBar(
+                            controller: _tabController,
+                            labelColor: Theme.of(context).colorScheme.primary,
+                            unselectedLabelColor: Colors.grey,
+                            indicatorColor: Theme.of(context).colorScheme.primary,
+                            tabs: const [
+                              Tab(text: 'Stories'),
+                              Tab(text: 'Earnings'),
+                              Tab(text: 'Reads'),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          [
+                            ProfileStoryListSection(),
+                            const Center(child: Text('Earnings Content')),
+                            const Center(child: Text('Recent Reads Content')),
+                          ][_tabController!.index],
+                        ] else ...[
+                          RequestWriterAccessButton(),
+                          const SizedBox(height: 10),
+                          ProfileStoryListSection(),
+                        ],
                       ],
                     ),
                   ),

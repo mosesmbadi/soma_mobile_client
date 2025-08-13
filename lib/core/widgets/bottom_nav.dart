@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:soma/features/home_page/viewmodels/home_page_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soma/core/widgets/nav_warning_card.dart';
 import 'package:soma/core/widgets/show_toast.dart';
 import 'package:soma/data/user_repository.dart';
 import 'package:soma/core/exceptions/auth_exception.dart';
+import 'package:soma/features/home_page/viewmodels/home_page_viewmodel.dart';
 
 import 'package:soma/features/my_stories_page/views/my_stories_page.dart';
 import 'package:soma/features/add_story_page/views/add_story_page.dart';
@@ -45,79 +46,34 @@ class _BottomNavShellState extends State<BottomNavShell> {
               children: [
                 _buildPage(viewModel.selectedIndex),
 
-                // Floating Bottom Navigation
                 Positioned(
                   bottom: 16,
                   left: 16,
                   right: 16,
-                  child: Card(
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Theme(
-                        data: Theme.of(context).copyWith(
-                          splashFactory: InkRipple.splashFactory, // Circular ripple
-                          splashColor: Colors.blueAccent.withOpacity(0.2),
-                          highlightColor: Colors.transparent, // No highlight overlay
-                        ),
-                        child: BottomNavigationBar(
-                          items: const <BottomNavigationBarItem>[
-                            BottomNavigationBarItem(
-                              icon: Icon(Icons.home),
-                              label: '',
-                            ),
-                            BottomNavigationBarItem(
-                              icon: Icon(Icons.note),
-                              label: '',
-                            ),
-                            BottomNavigationBarItem(
-                              icon: Icon(Icons.add_circle),
-                              label: '',
-                            ),
-                            BottomNavigationBarItem(
-                              icon: Icon(Icons.person),
-                              label: '',
-                            ),
-                          ],
-                          currentIndex: viewModel.selectedIndex,
-                          selectedItemColor: Colors.blueAccent,
-                          unselectedItemColor: Colors.grey,
-                          onTap: (index) async {
-                            if (index == 2) {
-                              try {
-                                // Check user role before navigating to AddStoryPage
-                                final userDetails = await _userRepository.getCurrentUserDetails();
-                                final userRole = userDetails['role'];
+                  child: NavWarningCard(
+                    selectedIndex: viewModel.selectedIndex,
+                    onItemTapped: (index) async {
+                      if (index == 2) {
+                        try {
+                          final userDetails = await _userRepository.getCurrentUserDetails();
+                          final userRole = userDetails['role'];
 
-                                if (userRole == 'reader') {
-                                  _showAccessDeniedDialog(context);
-                                } else {
-                                  Navigator.pushNamed(context, '/add_story');
-                                }
-                              } on AuthException catch (e) {
-                                // If token is invalid or expired, redirect to login page
-                                print('AuthException: $e');
-                                await _prefs.remove('jwt_token'); // Clear token
-                                Navigator.pushReplacementNamed(context, '/login');
-                              } catch (e) {
-                                // Handle other errors
-                                print('An error occurred: $e');
-                              }
-                            } else {
-                              viewModel.onItemTapped(index);
-                            }
-                          },
-                          type: BottomNavigationBarType.fixed,
-                          backgroundColor: Colors.transparent,
-                          elevation: 0,
-                          showSelectedLabels: false,
-                          showUnselectedLabels: false,
-                        ),
-                      ),
-                    ),
+                          if (userRole == 'reader') {
+                            _showAccessDeniedDialog(context);
+                          } else {
+                            Navigator.pushNamed(context, '/add_story');
+                          }
+                        } on AuthException catch (e) {
+                          print('AuthException: $e');
+                          await _prefs.remove('jwt_token');
+                          Navigator.pushReplacementNamed(context, '/login');
+                        } catch (e) {
+                          print('An error occurred: $e');
+                        }
+                      } else {
+                        viewModel.onItemTapped(index);
+                      }
+                    },
                   ),
                 ),
               ],
@@ -146,14 +102,36 @@ class _BottomNavShellState extends State<BottomNavShell> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Access Denied'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Row(
+            children: [
+              Text('❗ ', style: TextStyle(fontSize: 20)),
+              Text(
+                'Access Denied',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
           content: const Text(
-              'Only writers can add stories. Please request writer access.'),
+            'Only writers can add stories.\nPlease request writer access.',
+            style: TextStyle(fontSize: 16),
+          ),
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           actions: <Widget>[
-            TextButton(
-              child: const Text('Request Writer Access'),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF333333),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
               onPressed: () async {
-                Navigator.pop(context); // Close dialog
+                Navigator.pop(context);
                 final result = await _userRepository.requestWriterAccess(
                     _prefs.getString('jwt_token') ?? '');
                 final bool success = result['success'] as bool;
@@ -164,11 +142,18 @@ class _BottomNavShellState extends State<BottomNavShell> {
                   showToast(context, message, type: ToastType.error);
                 }
               },
+              child: const Text(
+                'Request Writer Access',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
             ),
             TextButton(
-              child: const Text('Cancel'),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
               onPressed: () {
-                Navigator.pop(context); // Close dialog
+                Navigator.pop(context);
               },
             ),
           ],

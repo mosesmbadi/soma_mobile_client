@@ -55,7 +55,8 @@ class LandingPage extends StatelessWidget {
                           "Created for Readers, by readers.",
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontFamily: 'PlaywriteQLD',
+                            // TODO: this font is not being picked correctly
+                            fontFamily: 'HighEmpathy',
                             color: Colors.grey,
                             fontSize: 20,
                           ),

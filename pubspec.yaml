@@ -1,5 +1,5 @@
 name: soma
-description: "A new Flutter project."
+description: "An app that helps writers earnn from their work."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -50,3 +50,9 @@ flutter:
     - assets/images/landing_page_hero1.jpg
     - assets/images/google_logo.png
     - assets/images/default_thumbnail.jpg
+    - assets/fonts/
+
+fonts:
+  - family: HighEmpathy
+    fonts:
+      - asset: assets/fonts/high_empathy.ttf
