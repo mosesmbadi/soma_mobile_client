@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import for MethodChannel
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,9 +7,7 @@ import 'package:soma/data/user_repository.dart';
 import 'package:soma/data/story_repository.dart';
 import 'package:soma/features/story_detail_page/views/story_detail_page.dart';
 import 'package:soma/features/author_profile_page/views/author_profile_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'dart:io'; // For HttpOverrides
 
 // Mock classes for dependencies
 class MockUserRepository extends Mock implements UserRepository {

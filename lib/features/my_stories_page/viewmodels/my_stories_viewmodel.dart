@@ -46,7 +46,11 @@ class MyStoriesViewModel extends ChangeNotifier {
     }
 
     try {
-      _myStories = await _storyRepository.fetchMyStories(token);
+      final fetchedStories = await _storyRepository.fetchMyStories(token);
+      for (var story in fetchedStories) {
+        print('MyStoriesViewModel - Story ID: ${story['_id']}, Thumbnail URL: ${story['thumbnailUrl']}');
+      }
+      _myStories = fetchedStories;
     } catch (e) {
       _errorMessage = 'An error occurred: $e';
     } finally {

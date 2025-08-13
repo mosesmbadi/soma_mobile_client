@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'package:soma/features/author_profile_page/viewmodels/author_profile_viewmodel.dart';
-import 'package:soma/core/widgets/stories/story_card_row.dart'; // Assuming this widget is available
+import 'package:soma/core/widgets/stories/story_card_row.dart';
 import 'package:soma/features/story_detail_page/views/story_detail_page.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -30,7 +32,7 @@ class AuthorProfilePage extends StatelessWidget {
           );
         } else {
           final SharedPreferences prefs = snapshot.data!;
-          final http.Client client = http.Client(); // Create a new client for this viewmodel
+          final http.Client client = http.Client();
 
           return ChangeNotifierProvider(
             create: (_) => AuthorProfileViewModel(

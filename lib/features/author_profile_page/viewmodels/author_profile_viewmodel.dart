@@ -28,15 +28,8 @@ class AuthorProfileViewModel extends ChangeNotifier {
     _fetchAuthorData();
   }
 
-  // Synchronous getter for SharedPreferences, assuming it's already initialized elsewhere
-  // This is a simplification; in a real app, you'd likely pass SharedPreferences
-  // or ensure it's initialized asynchronously and then passed.
   static SharedPreferences _getPrefsSync() {
-    // This is a placeholder. In a real app, you'd use a proper dependency injection
-    // or ensure SharedPreferences.getInstance() has been called and awaited
-    // before this ViewModel is instantiated.
-    // For now, we'll just return a dummy or assume it's globally accessible.
-    // This might cause issues if SharedPreferences is not ready.
+    // TODO: This might cause issues if SharedPreferences is not ready.
     return throw Exception("SharedPreferences not initialized synchronously.");
   }
 

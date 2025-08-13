@@ -19,25 +19,29 @@ class TagSelectionSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8.0),
-        Wrap(
-          spacing: 8.0,
-          runSpacing: 4.0,
-          children: viewModel.availableTags.map<Widget>((tag) {
-            final String tagId = tag['_id'];
-            final String tagName = tag['name'];
-            final bool isSelected = viewModel.selectedTagIds.contains(tagId);
-            return ChoiceChip(
-              label: Text(tagName),
-              selected: isSelected,
-              onSelected: (selected) {
-                viewModel.toggleTagSelection(tagId);
-              },
-              selectedColor: Colors.blueAccent,
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.white : Colors.black,
-              ),
-            );
-          }).toList(),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: viewModel.availableTags.map<Widget>((tag) {
+              final String tagId = tag['_id'];
+              final String tagName = tag['name'];
+              final bool isSelected = viewModel.selectedTagIds.contains(tagId);
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: ChoiceChip(
+                  label: Text(tagName),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    viewModel.toggleTagSelection(tagId);
+                  },
+                  selectedColor: const Color(0xFF333333),
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.white : Colors.black,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ),
         if (viewModel.tagsErrorMessage.isNotEmpty)
           Padding(

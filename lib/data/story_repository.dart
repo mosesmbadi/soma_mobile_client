@@ -2,9 +2,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../core/config/environment.dart';
 
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../core/config/environment.dart';
+// TODO: Performance bottleneck on unlocked stories by the user
+// Cache for unlocked story IDs
 
 class StoryRepository {
   final http.Client _client;
@@ -31,6 +30,7 @@ class StoryRepository {
   }
 
   Future<List<dynamic>> fetchMyStories(String token) async {
+    print('StoryRepository - Entering fetchMyStories method.');
     try {
       final response = await _client.get(
         Uri.parse(_myStoriesApiUrl),
@@ -42,6 +42,7 @@ class StoryRepository {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
+        print('StoryRepository - Raw data from backend (my-stories): $data');
         return data.cast<Map<String, dynamic>>();
       } else {
         throw Exception('Failed to load your stories: ${response.statusCode}. Body: ${response.body}');

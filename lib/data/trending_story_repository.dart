@@ -2,10 +2,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../core/config/environment.dart';
 
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../core/config/environment.dart';
-
 class TrendingStoryRepository {
   final http.Client _client;
   final String _trendingStoriesApiUrl = '${Environment.backendUrl}/api/stories/trending';
