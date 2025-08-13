@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:soma/features/profile_page/viewmodels/profile_page_viewmodel.dart';
@@ -11,6 +10,7 @@ class ProfileStoryListSection extends StatelessWidget {
     required String title,
     required String author,
     required String date,
+    required String thumbnailUrl,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -23,10 +23,8 @@ class ProfileStoryListSection extends StatelessWidget {
             height: 50,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              image: const DecorationImage(
-                image: NetworkImage(
-                  'https://images.pexels.com/photos/986857/pexels-photo-986857.jpeg',
-                ),
+              image: DecorationImage(
+                image: NetworkImage(thumbnailUrl),
                 fit: BoxFit.cover,
               ),
             ),
@@ -109,10 +107,7 @@ class ProfileStoryListSection extends StatelessWidget {
                 },
                 child: const Text(
                   'View All',
-                  style: TextStyle(
-                    color: Color(0xFF333333),
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: Color(0xFF333333), fontSize: 16),
                 ),
               ),
             ],
@@ -128,27 +123,21 @@ class ProfileStoryListSection extends StatelessWidget {
                           .map((story) {
                             if (story is Map<String, dynamic>) {
                               return _buildRecentReadItem(
-                                title:
-                                    story['title'] ??
-                                    'No Title',
+                                title: story['title'] ?? 'No Title',
                                 author:
-                                    (story['author']
-                                        is Map<String, dynamic>)
+                                    (story['author'] is Map<String, dynamic>)
                                     ? story['author']['name'] ??
                                           'Unknown Author'
-                                    : (story['author']
-                                          is String)
+                                    : (story['author'] is String)
                                     ? story['author']
                                     : 'Unknown Author',
                                 date: story['createdAt'] != null
-                                    ? DateFormat(
-                                        'MMM d, yyyy',
-                                      ).format(
-                                        DateTime.parse(
-                                          story['createdAt'],
-                                        ),
+                                    ? DateFormat('MMM d, yyyy').format(
+                                        DateTime.parse(story['createdAt']),
                                       )
                                     : '',
+                                thumbnailUrl:
+                                    story['thumbnail'] as String? ?? '',
                               );
                             } else {
                               return const SizedBox.shrink(); // Or a placeholder widget
@@ -163,27 +152,21 @@ class ProfileStoryListSection extends StatelessWidget {
                           .map((story) {
                             if (story is Map<String, dynamic>) {
                               return _buildRecentReadItem(
-                                title:
-                                    story['title'] ??
-                                    'No Title',
+                                title: story['title'] ?? 'No Title',
                                 author:
-                                    (story['author']
-                                        is Map<String, dynamic>)
+                                    (story['author'] is Map<String, dynamic>)
                                     ? story['author']['name'] ??
                                           'Unknown Author'
-                                    : (story['author']
-                                          is String)
+                                    : (story['author'] is String)
                                     ? story['author']
                                     : 'Unknown Author',
                                 date: story['createdAt'] != null
-                                    ? DateFormat(
-                                        'MMM d, yyyy',
-                                      ).format(
-                                        DateTime.parse(
-                                          story['createdAt'],
-                                        ),
+                                    ? DateFormat('MMM d, yyyy').format(
+                                        DateTime.parse(story['createdAt']),
                                       )
                                     : '',
+                                thumbnailUrl:
+                                    story['thumbnail'] as String? ?? ' ',
                               );
                             } else {
                               return const SizedBox.shrink(); // Or a placeholder widget
@@ -193,35 +176,28 @@ class ProfileStoryListSection extends StatelessWidget {
                           .cast<Widget>(),
                     )
                   : const SizedBox.shrink();
-            } else if (viewModel.userData!['role'] ==
-                'writer') {
+            } else if (viewModel.userData!['role'] == 'writer') {
               return (viewModel.myStories.isNotEmpty)
                   ? Column(
                       children: viewModel.myStories
                           .map((story) {
                             if (story is Map<String, dynamic>) {
                               return _buildRecentReadItem(
-                                title:
-                                    story['title'] ??
-                                    'No Title',
+                                title: story['title'] ?? 'No Title',
                                 author:
-                                    (story['author']
-                                        is Map<String, dynamic>)
+                                    (story['author'] is Map<String, dynamic>)
                                     ? story['author']['name'] ??
                                           'Unknown Author'
-                                    : (story['author']
-                                          is String)
+                                    : (story['author'] is String)
                                     ? story['author']
                                     : 'Unknown Author',
                                 date: story['createdAt'] != null
-                                    ? DateFormat(
-                                        'MMM d, yyyy',
-                                      ).format(
-                                        DateTime.parse(
-                                          story['createdAt'],
-                                        ),
+                                    ? DateFormat('MMM d, yyyy').format(
+                                        DateTime.parse(story['createdAt']),
                                       )
                                     : '',
+                                thumbnailUrl:
+                                    story['thumbnail'] as String? ?? ' ',
                               );
                             } else {
                               return const SizedBox.shrink(); // Or a placeholder widget
@@ -236,27 +212,21 @@ class ProfileStoryListSection extends StatelessWidget {
                           .map((story) {
                             if (story is Map<String, dynamic>) {
                               return _buildRecentReadItem(
-                                title:
-                                    story['title'] ??
-                                    'No Title',
+                                title: story['title'] ?? 'No Title',
                                 author:
-                                    (story['author']
-                                        is Map<String, dynamic>)
+                                    (story['author'] is Map<String, dynamic>)
                                     ? story['author']['name'] ??
                                           'Unknown Author'
-                                    : (story['author']
-                                          is String)
+                                    : (story['author'] is String)
                                     ? story['author']
                                     : 'Unknown Author',
                                 date: story['createdAt'] != null
-                                    ? DateFormat(
-                                        'MMM d, yyyy',
-                                      ).format(
-                                        DateTime.parse(
-                                          story['createdAt'],
-                                        ),
+                                    ? DateFormat('MMM d, yyyy').format(
+                                        DateTime.parse(story['createdAt']),
                                       )
                                     : '',
+                                thumbnailUrl:
+                                    story['thumbnail'] as String? ?? ' ',
                               );
                             } else {
                               return const SizedBox.shrink(); // Or a placeholder widget

@@ -7,13 +7,13 @@ class HomePageViewModel extends ChangeNotifier {
   final TrendingStoryRepository _trendingStoryRepository = TrendingStoryRepository();
   int _selectedIndex = 0;
   List<dynamic> _stories = [];
-  List<dynamic> _trendingStories = [];
+  List<Map<String, dynamic>> _trendingStories = [];
   String _errorMessage = '';
   bool _isLoading = true;
 
   int get selectedIndex => _selectedIndex;
   List<dynamic> get stories => _stories;
-  List<dynamic> get trendingStories => _trendingStories;
+  List<Map<String, dynamic>> get trendingStories => _trendingStories;
   String get errorMessage => _errorMessage;
   bool get isLoading => _isLoading;
 

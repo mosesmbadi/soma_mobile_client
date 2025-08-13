@@ -98,10 +98,17 @@ class StoryCardGrid extends StatelessWidget {
                           spacing: 6.0,
                           runSpacing: 0.0,
                           children: (story['tags'] as List<dynamic>).map((tag) {
-                            final Map<String, dynamic> tagMap = tag as Map<String, dynamic>;
+                            String tagName;
+                            if (tag is Map<String, dynamic>) {
+                              tagName = tag['name'] ?? '';
+                            } else if (tag is String) {
+                              tagName = tag;
+                            } else {
+                              tagName = ''; // Default or handle unexpected type
+                            }
                             return Chip(
                               label: Text(
-                                tagMap['name'],
+                                tagName,
                                 style: const TextStyle(fontSize: 10, color: Colors.white),
                               ),
                               backgroundColor: Colors.blueGrey.withOpacity(0.7),
