@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:soma/data/user_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:soma/data/offer_repository.dart'; // Import the new repository
 
 class StoryUnlockCard extends StatefulWidget {
   final int neededTokens;
@@ -16,6 +17,10 @@ class _StoryUnlockCardState extends State<StoryUnlockCard> {
   late final UserRepository _userRepository;
   late final SharedPreferences _prefs;
   late final http.Client _httpClient;
+  late final OfferRepository _offerRepository; // Add OfferRepository
+  List<Map<String, dynamic>> _offers = []; // List to hold fetched offers
+  bool _isLoadingOffers = true; // Loading state for offers
+  String _offersErrorMessage = ''; // Error message for offers
 
   @override
   void initState() {
@@ -27,7 +32,29 @@ class _StoryUnlockCardState extends State<StoryUnlockCard> {
   Future<void> _initializeDependencies() async {
     _prefs = await SharedPreferences.getInstance();
     _userRepository = UserRepository(prefs: _prefs, client: _httpClient);
-    setState(() {}); // Rebuild to use the initialized repository
+    _offerRepository = OfferRepository(client: _httpClient); // Initialize OfferRepository
+    await _fetchOffers(); // Fetch offers
+    setState(() {}); // Rebuild to use the initialized repository and fetched offers
+  }
+
+  Future<void> _fetchOffers() async {
+    _isLoadingOffers = true;
+    _offersErrorMessage = '';
+    try {
+      final String? token = _prefs.getString('jwt_token');
+      if (token == null) {
+        _offersErrorMessage = 'Authentication token not found. Cannot fetch offers.';
+        return;
+      }
+      _offers = await _offerRepository.fetchOffers(token);
+    } catch (e) {
+      _offersErrorMessage = 'Failed to load offers: $e';
+    } finally {
+      _isLoadingOffers = false;
+      if (mounted) {
+        setState(() {});
+      }
+    }
   }
 
   @override
@@ -102,9 +129,33 @@ class _StoryUnlockCardState extends State<StoryUnlockCard> {
                 ),
                 const SizedBox(height: 20),
                 // Token packages
-                _buildTokenOption('100 Tokens', 'Ksh120.99', highlight: true),
-                const SizedBox(height: 12),
-                _buildTokenOption('50 Tokens', 'Ksh10.99'),
+                if (_isLoadingOffers) ...[
+                  const Center(child: CircularProgressIndicator()),
+                ] else if (_offersErrorMessage.isNotEmpty) ...[
+                  Center(child: Text(_offersErrorMessage, style: const TextStyle(color: Colors.red))),
+                ] else if (_offers.isEmpty) ...[
+                  const Center(child: Text('No offers available.')),
+                ] else ...[
+                  Column(
+                    children: _offers.map((offer) {
+                      final String name = offer['name'] ?? 'Unknown Offer';
+                      final double kshAmount = (offer['kshAmount'] as num?)?.toDouble() ?? 0.0;
+                      final int tokenAmount = (offer['tokenAmount'] as num?)?.toInt() ?? 0;
+                      final bool isActive = offer['isActive'] ?? false; // Assuming 'isActive' field
+
+                      if (!isActive) return const SizedBox.shrink(); // Only show active offers
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12.0),
+                        child: _buildTokenOption(
+                          '$tokenAmount Tokens',
+                          'Ksh${kshAmount.toStringAsFixed(2)}',
+                          highlight: _offers.indexOf(offer) == 0, // Highlight the first offer
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
                 const SizedBox(height: 20),
                 // Top Up button
                 SizedBox(
