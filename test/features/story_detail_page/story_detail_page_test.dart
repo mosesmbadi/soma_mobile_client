@@ -12,7 +12,7 @@ import 'package:soma/features/story_detail_page/viewmodels/story_detail_viewmode
 import 'package:soma/features/story_detail_page/views/story_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soma/core/widgets/guest_registration_card.dart';
-import 'package:soma/core/widgets/story_unlock_card.dart';
+import 'package:soma/core/widgets/stories/story_unlock_card.dart';
 import 'package:http/http.dart' as http;
 
 // Mocks

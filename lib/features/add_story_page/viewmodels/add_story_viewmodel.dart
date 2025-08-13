@@ -303,7 +303,18 @@ class AddStoryViewModel extends ChangeNotifier {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
+      // Get file size
+      final int fileSize = await image.length(); // File size in bytes
+      const int maxFileSize = 7 * 1024 * 1024; // 7 MB in bytes
+
+      if (fileSize > maxFileSize) {
+        _errorMessage = 'Uh oh! Image file is too large. Please select an image less than 7MB.';
+        notifyListeners();
+        return; // Stop here, do not proceed with upload
+      }
+
       _isLoading = true;
+      _errorMessage = ''; // Clear previous errors
       notifyListeners();
       try {
         final imageUrl = await ImageUploadService.uploadImage(File(image.path));

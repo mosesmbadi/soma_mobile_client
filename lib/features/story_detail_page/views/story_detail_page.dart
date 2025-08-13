@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:provider/provider.dart';
-import 'package:soma/core/widgets/story_unlock_card.dart';
+import 'package:soma/core/widgets/stories/story_unlock_card.dart';
 import 'package:soma/core/widgets/guest_registration_card.dart';
 import 'package:soma/features/story_detail_page/viewmodels/story_detail_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -235,10 +235,17 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                                   spacing: 6.0,
                                   runSpacing: 0.0,
                                   children: (widget.story['tags'] as List<dynamic>).map((tag) {
-                                    final Map<String, dynamic> tagMap = tag as Map<String, dynamic>;
+                                    String tagName;
+                                    if (tag is Map<String, dynamic>) {
+                                      tagName = tag['name'] ?? '';
+                                    } else if (tag is String) {
+                                      tagName = tag;
+                                    } else {
+                                      tagName = ''; // Default or handle unexpected type
+                                    }
                                     return Chip(
                                       label: Text(
-                                        tagMap['name'],
+                                        tagName,
                                         style: const TextStyle(fontSize: 10, color: Colors.white),
                                       ),
                                       backgroundColor: Colors.blueGrey,

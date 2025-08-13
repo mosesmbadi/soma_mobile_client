@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:soma/core/widgets/story_card_row.dart';
+import 'package:soma/core/widgets/stories/story_card_row.dart';
 
 void main() {
   group('StoryCardRow', () {
