@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:soma/features/home_page/viewmodels/home_page_viewmodel.dart';
-import 'package:soma/core/widgets/story_card_grid.dart'; // StoryCardMain is here
-import 'package:soma/core/widgets/story_card_row.dart';
+import 'package:soma/core/widgets/stories/story_card_grid.dart'; // StoryCardMain is here
+import 'package:soma/core/widgets/stories/story_card_row.dart';
 import 'package:soma/features/story_detail_page/views/story_detail_page.dart';
 
 class HomePage extends StatelessWidget {
