@@ -6,7 +6,8 @@ import 'package:soma/core/widgets/stories/story_card_row.dart';
 import 'package:soma/features/story_detail_page/views/story_detail_page.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final ScrollController? scrollController; // Make it nullable
+  const HomePage({super.key, this.scrollController}); // Add to constructor
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +28,7 @@ class HomePage extends StatelessWidget {
             return const Center(child: Text('No stories available yet.'));
           } else {
             return SingleChildScrollView(
+              controller: scrollController, // Attach controller
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

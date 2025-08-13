@@ -22,11 +22,48 @@ class BottomNavShell extends StatefulWidget {
 class _BottomNavShellState extends State<BottomNavShell> {
   late SharedPreferences _prefs;
   late UserRepository _userRepository;
+  late ScrollController _scrollController;
+  bool _showBottomNav = true;
+  double _previousScrollOffset = 0.0;
+  bool _isInitialized = false; // New flag
 
   @override
   void initState() {
     super.initState();
-    _initDependencies();
+    _initDependencies().then((_) { // Ensure _initDependencies completes
+      _scrollController = ScrollController();
+      _scrollController.addListener(_scrollListener);
+      if (mounted) { // Check if widget is still in tree
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    });
+  }
+
+  void _scrollListener() {
+    // Logic to hide/show based on scroll direction
+    if (_scrollController.offset > _previousScrollOffset && _scrollController.offset > 50) { // Scrolled down
+      if (_showBottomNav) {
+        setState(() {
+          _showBottomNav = false;
+        });
+      }
+    } else if (_scrollController.offset < _previousScrollOffset) { // Scrolled up
+      if (!_showBottomNav) {
+        setState(() {
+          _showBottomNav = true;
+        });
+      }
+    }
+    _previousScrollOffset = _scrollController.offset;
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _initDependencies() async {
@@ -36,6 +73,10 @@ class _BottomNavShellState extends State<BottomNavShell> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      return const Center(child: CircularProgressIndicator()); // Show loading
+    }
+
     return ChangeNotifierProvider(
       create: (_) => HomePageViewModel(),
       child: Consumer<HomePageViewModel>(
@@ -46,10 +87,12 @@ class _BottomNavShellState extends State<BottomNavShell> {
               children: [
                 _buildPage(viewModel.selectedIndex),
 
-                Positioned(
-                  bottom: 16,
+                AnimatedPositioned(
+                  bottom: _showBottomNav ? 16 : -kBottomNavigationBarHeight, // Animate position
                   left: 16,
                   right: 16,
+                  duration: const Duration(milliseconds: 300), // Animation duration
+                  curve: Curves.easeOut, // Animation curve
                   child: NavWarningCard(
                     selectedIndex: viewModel.selectedIndex,
                     onItemTapped: (index) async {
@@ -87,13 +130,13 @@ class _BottomNavShellState extends State<BottomNavShell> {
   Widget _buildPage(int selectedIndex) {
     switch (selectedIndex) {
       case 0:
-        return const HomePage();
+        return HomePage(scrollController: _scrollController); // Pass controller
       case 1:
         return const MyStoriesPage();
       case 3:
-        return const ProfilePage();
+        return ProfilePage(scrollController: _scrollController); // Pass controller
       default:
-        return const HomePage();
+        return HomePage(scrollController: _scrollController); // Pass controller
     }
   }
 

@@ -11,7 +11,8 @@ import 'package:soma/features/profile_page/widgets/request_writer_access_button.
 import 'package:soma/features/profile_page/widgets/profile_story_list_section.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  final ScrollController? scrollController; // Make it nullable
+  const ProfilePage({super.key, this.scrollController}); // Add to constructor
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -94,6 +95,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                 : viewModel.userData == null
                 ? const Center(child: CircularProgressIndicator()) // Show loading indicator if user data is null
                 : SingleChildScrollView(
+                    controller: widget.scrollController, // Attach controller
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
