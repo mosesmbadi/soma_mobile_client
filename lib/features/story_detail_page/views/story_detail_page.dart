@@ -11,6 +11,7 @@ import 'package:soma/data/story_repository.dart';
 import 'package:soma/data/user_repository.dart';
 import 'package:http/http.dart' as http;
 import 'package:soma/features/author_profile_page/views/author_profile_page.dart';
+import 'package:soma/core/config/environment.dart';
 
 class StoryDetailPage extends StatefulWidget {
   final Map<String, dynamic> story;
@@ -32,12 +33,13 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
   int _currentUserTokens = 0;
   bool _isUnlocking = false;
   bool _isDataLoaded = false; // New flag
+  bool _hasUpvoted = false; // Track if the user has already upvoted
 
   @override
   void initState() {
     super.initState();
     _httpClient = http.Client(); // Initialize http client
-    
+
     _initializeDependencies().then((_) {
       // After dependencies are initialized, fetch data
       _initializeData();
@@ -56,7 +58,8 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     if (token == null) {
       print('Error: No authentication token found.');
       setState(() {
-        _isDataLoaded = true; // Set to true even if no token, to stop loading indicator
+        _isDataLoaded =
+            true; // Set to true even if no token, to stop loading indicator
       });
       return;
     }
@@ -72,7 +75,9 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
       final userDetails = await _userRepository.getCurrentUserDetails();
       setState(() {
         _currentUserId = userDetails['_id'];
-        _currentUserTokens = (userDetails['tokens'] as num?)?.toInt() ?? 0; // Fixed type conversion
+        _currentUserTokens =
+            (userDetails['tokens'] as num?)?.toInt() ??
+            0; // Fixed type conversion
       });
     } catch (e) {
       print('Error fetching current user details: $e');
@@ -154,12 +159,51 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     print('Attempting to top up!');
   }
 
+  Future<void> _handleUpvote() async {
+    if (_hasUpvoted) {
+      _showSnackBar('You have already upvoted this story.');
+      return;
+    }
+
+    final String? token = _prefs.getString('jwt_token');
+    if (token == null) {
+      _showSnackBar('Authentication token not found. Please log in.');
+      return;
+    }
+
+    final String storyId = widget.story['_id'];
+    try {
+      final response = await _httpClient.patch(
+        Uri.parse('${Environment.backendUrl}/api/stories/$storyId/upvote'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _hasUpvoted = true;
+        });
+        _showSnackBar(
+          'Story upvoted successfully!',
+          backgroundColor: Colors.green.shade200,
+        );
+      } else {
+        _showSnackBar('Failed to upvote story: ${response.body}');
+      }
+    } catch (e) {
+      _showSnackBar('An error occurred while upvoting: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final String storySlug = widget.story['slug'] ?? '';
     final int estimatedTime = widget.story['estimatedTime'] ?? 30;
     final bool isPremium = widget.story['is_premium'] == true;
-    final bool isMyStory = _currentUserId != null &&
+    final bool isMyStory =
+        _currentUserId != null &&
         widget.story['author']?['_id'] == _currentUserId;
 
     return ChangeNotifierProvider(
@@ -190,6 +234,15 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
           return Scaffold(
             appBar: AppBar(
               backgroundColor: const Color.fromARGB(255, 232, 186, 255),
+              actions: [
+                IconButton(
+                  icon: Icon(
+                    _hasUpvoted ? Icons.thumb_up : Icons.thumb_up_outlined,
+                    color: _hasUpvoted ? Colors.blue : Colors.black,
+                  ),
+                  onPressed: _handleUpvote,
+                ),
+              ],
             ),
             body: _isDataLoaded
                 ? SingleChildScrollView(
@@ -206,53 +259,77 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Row( // Wrap author and tags in a Row
+                        Row(
+                          // Wrap author and tags in a Row
                           children: [
                             GestureDetector(
                               onTap: () {
-                                final String? authorId = widget.story['author']?['_id'];
+                                final String? authorId =
+                                    widget.story['author']?['_id'];
                                 if (authorId != null) {
-                                  print('Navigating to AuthorProfilePage with authorId: $authorId');
+                                  print(
+                                    'Navigating to AuthorProfilePage with authorId: $authorId',
+                                  );
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => AuthorProfilePage(authorId: authorId),
+                                      builder: (context) =>
+                                          AuthorProfilePage(authorId: authorId),
                                     ),
                                   );
                                 } else {
-                                  print('Author ID is null. Cannot navigate to AuthorProfilePage.');
+                                  print(
+                                    'Author ID is null. Cannot navigate to AuthorProfilePage.',
+                                  );
                                 }
                               },
                               child: Text(
                                 'By $authorName',
-                                style: const TextStyle(fontSize: 12, color: Colors.blue, decoration: TextDecoration.underline),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.blue,
+                                  decoration: TextDecoration.underline,
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 8), // Space between author and tags
-                            if (widget.story['tags'] != null && widget.story['tags'].isNotEmpty)
-                              Expanded( // Use Expanded to allow tags to wrap
+                            const SizedBox(
+                              width: 8,
+                            ), // Space between author and tags
+                            if (widget.story['tags'] != null &&
+                                widget.story['tags'].isNotEmpty)
+                              Expanded(
+                                // Use Expanded to allow tags to wrap
                                 child: Wrap(
                                   spacing: 6.0,
                                   runSpacing: 0.0,
-                                  children: (widget.story['tags'] as List<dynamic>).map((tag) {
-                                    String tagName;
-                                    if (tag is Map<String, dynamic>) {
-                                      tagName = tag['name'] ?? '';
-                                    } else if (tag is String) {
-                                      tagName = tag;
-                                    } else {
-                                      tagName = ''; // Default or handle unexpected type
-                                    }
-                                    return Chip(
-                                      label: Text(
-                                        tagName,
-                                        style: const TextStyle(fontSize: 10, color: Colors.white),
-                                      ),
-                                      backgroundColor: const Color(0xFF333333),
-                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                      visualDensity: VisualDensity.compact,
-                                    );
-                                  }).toList(),
+                                  children: (widget.story['tags'] as List<dynamic>)
+                                      .map((tag) {
+                                        String tagName;
+                                        if (tag is Map<String, dynamic>) {
+                                          tagName = tag['name'] ?? '';
+                                        } else if (tag is String) {
+                                          tagName = tag;
+                                        } else {
+                                          tagName =
+                                              ''; // Default or handle unexpected type
+                                        }
+                                        return Chip(
+                                          label: Text(
+                                            tagName,
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          backgroundColor: const Color(
+                                            0xFF333333,
+                                          ),
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                          visualDensity: VisualDensity.compact,
+                                        );
+                                      })
+                                      .toList(),
                                 ),
                               ),
                           ],
@@ -271,7 +348,10 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                                     Container(
                                       height: 200,
                                       color: Colors.grey[300],
-                                      child: const Icon(Icons.broken_image, size: 50),
+                                      child: const Icon(
+                                        Icons.broken_image,
+                                        size: 50,
+                                      ),
                                     ),
                               ),
                             ),
@@ -303,13 +383,17 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                             if (_currentUserTokens < 1)
                               StoryUnlockCard(
                                 cardType: UnlockCardType.topUp,
-                                onButtonPressed: () { _handleTopUp(); },
+                                onButtonPressed: () {
+                                  _handleTopUp();
+                                },
                                 isLoading: _isUnlocking,
                               )
                             else
                               StoryUnlockCard(
                                 cardType: UnlockCardType.unlock,
-                                onButtonPressed: () { _handleUnlockStory(); },
+                                onButtonPressed: () {
+                                  _handleUnlockStory();
+                                },
                                 isLoading: _isUnlocking,
                               ),
                           ],
@@ -317,7 +401,9 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                       ],
                     ),
                   )
-                : const Center(child: CircularProgressIndicator()), // Show loading indicator
+                : const Center(
+                    child: CircularProgressIndicator(),
+                  ), // Show loading indicator
           );
         },
       ),

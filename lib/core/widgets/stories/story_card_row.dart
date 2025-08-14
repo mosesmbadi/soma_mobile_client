@@ -22,11 +22,14 @@ class StoryCardRow extends StatelessWidget {
             ? authorData
             : 'Unknown Author';
     final String thumbnailUrl = story['thumbnailUrl'] ?? '';
-    final String contentSnippet = QuillUtils.extractPlainText(story['content'] ?? '[]', maxLength: 150);
-    final int reads = story['reads'] ?? story['readCount'] ?? story['views'] ?? 0;
+    final String contentSnippet =
+        QuillUtils.extractPlainText(story['content'] ?? '[]', maxLength: 150);
+    final int reads =
+        story['reads'] ?? story['readCount'] ?? story['views'] ?? 0;
     final double rating = (story['rating'] ?? 4.5).toDouble();
-    final DateTime createdAt = DateTime.tryParse(story['createdAt'] ?? '') ?? DateTime.now();
-    String formattedDate = DateFormat('MMM d').format(createdAt);
+    final DateTime createdAt =
+        DateTime.tryParse(story['createdAt'] ?? '') ?? DateTime.now();
+    final String formattedDate = DateFormat('MMM d').format(createdAt);
 
     return GestureDetector(
       onTap: onTap,
@@ -44,7 +47,8 @@ class StoryCardRow extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -56,66 +60,78 @@ class StoryCardRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
+
+                    // Meta Info Row
                     Row(
                       children: [
+                        Icon(Icons.person, size: 12, color: Colors.grey[600]),
+                        const SizedBox(width: 4),
                         Expanded(
-                          child: Row(
-                            children: [
-                              const CircleAvatar(radius: 10, child: Icon(Icons.person, size: 12)),
-                              const SizedBox(width: 4),
-                              Expanded(child: Text(authorName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-                            ],
+                          child: Text(
+                            authorName,
+                            style: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w500),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Icon(Icons.access_time, size: 12, color: Colors.grey),
-                              const SizedBox(width: 4),
-                              Expanded(child: Text(formattedDate, style: const TextStyle(fontSize: 12, color: Colors.grey), overflow: TextOverflow.ellipsis)),
-                            ],
-                          ),
+                        const SizedBox(width: 8),
+                        Icon(Icons.access_time, size: 12, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          formattedDate,
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.grey),
                         ),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Icon(Icons.visibility, size: 12, color: Colors.grey),
-                              const SizedBox(width: 4),
-                              Expanded(child: Text('$reads', style: const TextStyle(fontSize: 12, color: Colors.grey), overflow: TextOverflow.ellipsis)),
-                            ],
-                          ),
+                        const SizedBox(width: 8),
+                        Icon(Icons.visibility, size: 12, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$reads',
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.grey),
                         ),
-
-                        // Display Tags
-                        if (story['tags'] != null && story['tags'].isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2.0),
-                            child: Wrap(
-                              spacing: 2.0, // reduced spacing between chips
-                              runSpacing: 0.0,
-                              children: (story['tags'] as List<dynamic>).map((tag) {
-                                final Map<String, dynamic> tagMap = tag as Map<String, dynamic>;
-                                return Chip(
-                                  label: Text(
-                                    tagMap['name'],
-                                    style: const TextStyle(fontSize: 9, color: Color(0xFFFFFFFF)), // smaller font
-                                  ),
-                                  backgroundColor: Color(0xFF333333),
-                                  labelPadding: const EdgeInsets.symmetric(horizontal: 4.0), // less padding
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: const VisualDensity(horizontal: -2.0, vertical: -4.0), // more compact
-                                  padding: EdgeInsets.zero, // minimal padding
-                                );
-                              }).toList(),
-                            ),
-                          ),
                       ],
                     ),
 
+                    // Tags
+                    if (story['tags'] != null &&
+                        story['tags'] is List &&
+                        (story['tags'] as List).isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6.0),
+                        child: Wrap(
+                          spacing: 4.0,
+                          runSpacing: 0.0,
+                          children: (story['tags'] as List<dynamic>)
+                              .map((tag) {
+                            final Map<String, dynamic> tagMap =
+                                tag as Map<String, dynamic>;
+                            return Chip(
+                              label: Text(
+                                tagMap['name'],
+                                style: const TextStyle(
+                                    fontSize: 8,
+                                    color: Colors.white),
+                              ),
+                              backgroundColor: const Color(0xFF333333),
+                              padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 0),
+                              labelPadding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: -3.0),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: const VisualDensity(
+                                  horizontal: -2.0, vertical: -4.0),
+                              // padding: EdgeInsets.zero,
+                            );
+                          }).toList(),
+                        ),
+                      ),
                   ],
                 ),
               ),
+
               const SizedBox(width: 12),
+
+              // Right side: Thumbnail
               ClipRRect(
                 borderRadius: BorderRadius.circular(6.0),
                 child: thumbnailUrl.isNotEmpty
