@@ -248,7 +248,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                                         tagName,
                                         style: const TextStyle(fontSize: 10, color: Colors.white),
                                       ),
-                                      backgroundColor: Colors.blueGrey,
+                                      backgroundColor: const Color(0xFF333333),
                                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                       visualDensity: VisualDensity.compact,
                                     );
