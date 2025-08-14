@@ -34,6 +34,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
   bool _isUnlocking = false;
   bool _isDataLoaded = false; // New flag
   bool _hasUpvoted = false; // Track if the user has already upvoted
+  int _upvotes = 0; // Initialize upvotes from story data
 
   @override
   void initState() {
@@ -184,6 +185,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
       if (response.statusCode == 200) {
         setState(() {
           _hasUpvoted = true;
+          _upvotes += 1; // Increment upvotes
         });
         _showSnackBar(
           'Story upvoted successfully!',
@@ -235,12 +237,22 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
             appBar: AppBar(
               backgroundColor: const Color.fromARGB(255, 232, 186, 255),
               actions: [
-                IconButton(
-                  icon: Icon(
-                    _hasUpvoted ? Icons.thumb_up : Icons.thumb_up_outlined,
-                    color: _hasUpvoted ? Colors.blue : Colors.black,
-                  ),
-                  onPressed: _handleUpvote,
+                Row(
+                  children: [
+                    Text(
+                      '$_upvotes',
+                      style: const TextStyle(fontSize: 16),
+                    ), // Display upvotes
+                    IconButton(
+                      icon: Icon(
+                        _hasUpvoted
+                            ? Icons.arrow_upward
+                            : Icons.arrow_upward_outlined,
+                        color: _hasUpvoted ? Colors.blue : Colors.black,
+                      ),
+                      onPressed: _handleUpvote,
+                    ),
+                  ],
                 ),
               ],
             ),

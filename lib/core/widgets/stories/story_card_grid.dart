@@ -5,11 +5,7 @@ class StoryCardGrid extends StatelessWidget {
   final Map<String, dynamic> story;
   final VoidCallback onTap;
 
-  const StoryCardGrid({
-    super.key,
-    required this.story,
-    required this.onTap,
-  });
+  const StoryCardGrid({super.key, required this.story, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -18,20 +14,28 @@ class StoryCardGrid extends StatelessWidget {
     final String authorName = (authorData is Map<String, dynamic>)
         ? authorData['name'] ?? 'Unknown Author'
         : (authorData is String)
-            ? authorData
-            : 'Unknown Author';
+        ? authorData
+        : 'Unknown Author';
     final String thumbnailUrl = story['thumbnailUrl'] ?? '';
-    final String contentSnippet = QuillUtils.extractPlainText(story['content'] ?? '[]', maxLength: 100);
+    final String contentSnippet = QuillUtils.extractPlainText(
+      story['content'] ?? '[]',
+      maxLength: 100,
+    );
 
-    final int reads = story['reads'] ?? story['readCount'] ?? story['views'] ?? 0;
-    final double rating = (story['rating'] ?? 4.5).toDouble();
+    final int reads =
+        story['reads'] ?? story['readCount'] ?? story['views'] ?? 0;
+    final int upvotes = (story['upvotes'] is int)
+        ? story['upvotes'] as int
+        : 0; // Ensure upvotes is an integer
 
     return GestureDetector(
       onTap: onTap,
       child: AspectRatio(
         aspectRatio: 1,
         child: Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           clipBehavior: Clip.antiAlias,
           child: Stack(
             fit: StackFit.expand,
@@ -45,7 +49,10 @@ class StoryCardGrid extends StatelessWidget {
                         child: const Icon(Icons.broken_image, size: 60),
                       ),
                     )
-                  : Container(color: Colors.grey[300]),
+                  : Container(
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.image, size: 60),
+                    ),
               Positioned.fill(
                 child: Container(
                   decoration: const BoxDecoration(
@@ -109,10 +116,14 @@ class StoryCardGrid extends StatelessWidget {
                             return Chip(
                               label: Text(
                                 tagName,
-                                style: const TextStyle(fontSize: 10, color: Colors.white),
+                                style: const TextStyle(
+                                  fontSize: 8,
+                                  color: Colors.white,
+                                ),
                               ),
-                              backgroundColor: Colors.blueGrey.withOpacity(0.7),
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              backgroundColor: const Color(0xFF333333),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
                               visualDensity: VisualDensity.compact,
                             );
                           }).toList(),
@@ -130,21 +141,35 @@ class StoryCardGrid extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const Icon(Icons.visibility, color: Colors.white70, size: 16),
+                        const Icon(
+                          Icons.visibility,
+                          color: Colors.white70,
+                          size: 16,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '$reads',
-                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(Icons.arrow_upward, color: Colors.amber, size: 16),
+                        const Icon(
+                          Icons.arrow_upward,
+                          color: Colors.amber,
+                          size: 16,
+                        ),
                         const SizedBox(width: 4),
                         Text(
-                          '$rating',
-                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          '$upvotes', // Display upvotes
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),

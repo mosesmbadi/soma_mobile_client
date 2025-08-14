@@ -26,7 +26,7 @@ class StoryCardRow extends StatelessWidget {
         QuillUtils.extractPlainText(story['content'] ?? '[]', maxLength: 150);
     final int reads =
         story['reads'] ?? story['readCount'] ?? story['views'] ?? 0;
-    final double rating = (story['rating'] ?? 4.5).toDouble();
+    final double upvotes = (story['upvotes'] ?? 0).toDouble();
     final DateTime createdAt =
         DateTime.tryParse(story['createdAt'] ?? '') ?? DateTime.now();
     final String formattedDate = DateFormat('MMM d').format(createdAt);
@@ -74,15 +74,20 @@ class StoryCardRow extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Icon(Icons.access_time, size: 12, color: Colors.grey),
+                        const SizedBox(width: 8),                        
+                        Icon(Icons.arrow_upward, size: 12, color: Colors.grey[600],),
                         const SizedBox(width: 4),
+                        Text(
+                        '$upvotes',
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                        const SizedBox(width: 8),
                         Text(
                           formattedDate,
                           style: const TextStyle(
                               fontSize: 12, color: Colors.grey),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                         Icon(Icons.visibility, size: 12, color: Colors.grey),
                         const SizedBox(width: 4),
                         Text(
