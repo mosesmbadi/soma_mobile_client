@@ -152,7 +152,11 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
       });
 
       // Show success message
-      showToast(context, 'Story unlocked successfully!', type: ToastType.success);
+      showToast(
+        context,
+        'Story unlocked successfully!',
+        type: ToastType.success,
+      );
     } catch (e) {
       print('Error unlocking story: $e');
     } finally {

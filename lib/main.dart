@@ -12,8 +12,10 @@ import 'package:soma/features/profile_page/views/profile_update_page.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:soma/core/services/user_repository.dart'; 
+import 'package:soma/core/services/user_repository.dart';
 import 'package:soma/core/services/story_repository.dart';
+import 'package:soma/core/services/analytics_repository.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -42,6 +44,11 @@ Future<void> main() async {
             client: Provider.of<http.Client>(context, listen: false),
           ),
         ),
+        Provider<AnalyticsRepository>(
+          create: (context) => AnalyticsRepository(
+            client: Provider.of<http.Client>(context, listen: false),
+          ),
+        ),
       ],
       child: MyApp(defaultHome: defaultHome),
     ),
@@ -62,11 +69,11 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         textTheme: GoogleFonts.robotoTextTheme(
           Theme.of(context).textTheme.copyWith(
-                displayLarge: const TextStyle(
-                  fontSize: 72,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            displayLarge: const TextStyle(
+              fontSize: 72,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ),
 
