@@ -5,8 +5,8 @@ import 'dart:async';
 class StoryDetailViewModel extends ChangeNotifier {
   final ScrollController _scrollController = ScrollController();
   final String storySlug;
-  final String storyId; // Add this line
-  final int estimatedTimeInSeconds; // Pass this from the story
+  final String storyId;
+  final int estimatedTimeInSeconds;
 
   bool _hasScrolledToBottom = false;
   bool _hasSpentEnoughTime = false;

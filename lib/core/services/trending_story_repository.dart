@@ -1,6 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../core/config/environment.dart';
+import '../config/environment.dart';
 
 class TrendingStoryRepository {
   final http.Client _client;

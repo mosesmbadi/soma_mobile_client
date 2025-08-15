@@ -6,8 +6,8 @@ import 'package:flutter/services.dart'; // Import for MethodChannel
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
-import 'package:soma/data/story_repository.dart';
-import 'package:soma/data/user_repository.dart';
+import 'package:soma/core/services/story_repository.dart';
+import 'package:soma/core/services/user_repository.dart';
 import 'package:soma/features/story_detail_page/viewmodels/story_detail_viewmodel.dart';
 import 'package:soma/features/story_detail_page/views/story_detail_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';

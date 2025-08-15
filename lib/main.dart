@@ -12,9 +12,8 @@ import 'package:soma/features/profile_page/views/profile_update_page.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:soma/data/user_repository.dart'; // Import UserRepository
-import 'package:soma/data/story_repository.dart'; // Import StoryRepository
-
+import 'package:soma/core/services/user_repository.dart'; 
+import 'package:soma/core/services/story_repository.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final SharedPreferences prefs = await SharedPreferences.getInstance();

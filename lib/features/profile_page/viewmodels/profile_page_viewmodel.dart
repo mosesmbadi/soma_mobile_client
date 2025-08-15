@@ -4,9 +4,9 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soma/features/landing_page/views/landing_page.dart';
 import '../../../core/config/environment.dart';
-import 'package:soma/data/user_repository.dart';
-import 'package:soma/data/story_repository.dart';
-import 'package:soma/data/trending_story_repository.dart';
+import 'package:soma/core/services/user_repository.dart';
+import 'package:soma/core/services/story_repository.dart';
+import 'package:soma/core/services/trending_story_repository.dart';
 import '../../../core/widgets/show_toast.dart';
 
 const String apiUrl = '${Environment.backendUrl}/api/auth/me';

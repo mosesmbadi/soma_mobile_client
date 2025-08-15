@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../data/story_repository.dart';
+import '../../../core/services/story_repository.dart';
 
 class GuestStoriesViewModel extends ChangeNotifier {
   final StoryRepository _storyRepository = StoryRepository();

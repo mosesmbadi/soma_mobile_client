@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class NavWarningCard extends StatelessWidget {
@@ -15,48 +14,33 @@ class NavWarningCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: Theme(
-          data: Theme.of(context).copyWith(
-            splashFactory: InkRipple.splashFactory,
-            splashColor: Colors.blueAccent.withOpacity(0.2),
-            highlightColor: Colors.transparent,
-          ),
-          child: BottomNavigationBar(
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.note),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.add_circle),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person),
-                label: '',
-              ),
-            ],
-            currentIndex: selectedIndex,
-            selectedItemColor: Colors.blueAccent,
-            unselectedItemColor: Colors.grey,
-            onTap: onItemTapped,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            showSelectedLabels: false,
-            showUnselectedLabels: false,
-          ),
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildNavIcon(Icons.home, 0),
+            _buildNavIcon(Icons.note, 1),
+            _buildNavIcon(Icons.add_circle, 2),
+            _buildNavIcon(Icons.person, 3),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildNavIcon(IconData icon, int index) {
+    return IconButton(
+      icon: Icon(
+        icon,
+        color: selectedIndex == index ? const Color(0xFF333333) : Colors.grey,
+      ),
+      onPressed: () => onItemTapped(index),
+
+      // Tighten padding around the icon
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
     );
   }
 }

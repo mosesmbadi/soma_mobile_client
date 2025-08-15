@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:soma/data/user_repository.dart';
-import 'package:soma/data/story_repository.dart';
+import 'package:soma/core/services/user_repository.dart';
+import 'package:soma/core/services/story_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 

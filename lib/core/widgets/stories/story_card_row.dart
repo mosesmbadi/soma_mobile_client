@@ -6,11 +6,7 @@ class StoryCardRow extends StatelessWidget {
   final Map<String, dynamic> story;
   final VoidCallback onTap;
 
-  const StoryCardRow({
-    super.key,
-    required this.story,
-    required this.onTap,
-  });
+  const StoryCardRow({super.key, required this.story, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -19,14 +15,18 @@ class StoryCardRow extends StatelessWidget {
     final String authorName = (authorData is Map<String, dynamic>)
         ? authorData['name'] ?? 'Unknown Author'
         : (authorData is String)
-            ? authorData
-            : 'Unknown Author';
+        ? authorData
+        : 'Unknown Author';
     final String thumbnailUrl = story['thumbnailUrl'] ?? '';
-    final String contentSnippet =
-        QuillUtils.extractPlainText(story['content'] ?? '[]', maxLength: 150);
+    final String contentSnippet = QuillUtils.extractPlainText(
+      story['content'] ?? '[]',
+      maxLength: 150,
+    );
     final int reads =
         story['reads'] ?? story['readCount'] ?? story['views'] ?? 0;
-    final double upvotes = (story['upvotes'] ?? 0).toDouble();
+    final double upvotes = (story['upvotes'] is num)
+        ? (story['upvotes'] as num).toDouble()
+        : 0.0;
     final DateTime createdAt =
         DateTime.tryParse(story['createdAt'] ?? '') ?? DateTime.now();
     final String formattedDate = DateFormat('MMM d').format(createdAt);
@@ -48,7 +48,9 @@ class StoryCardRow extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -70,22 +72,33 @@ class StoryCardRow extends StatelessWidget {
                           child: Text(
                             authorName,
                             style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w500),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 8),                        
-                        Icon(Icons.arrow_upward, size: 12, color: Colors.grey[600],),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.arrow_upward,
+                          size: 12,
+                          color: Colors.grey[600],
+                        ),
                         const SizedBox(width: 4),
                         Text(
-                        '$upvotes',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          '$upvotes',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Text(
                           formattedDate,
                           style: const TextStyle(
-                              fontSize: 12, color: Colors.grey),
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
                         ),
                         const SizedBox(width: 10),
                         Icon(Icons.visibility, size: 12, color: Colors.grey),
@@ -93,7 +106,9 @@ class StoryCardRow extends StatelessWidget {
                         Text(
                           '$reads',
                           style: const TextStyle(
-                              fontSize: 12, color: Colors.grey),
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     ),
@@ -107,24 +122,32 @@ class StoryCardRow extends StatelessWidget {
                         child: Wrap(
                           spacing: 4.0,
                           runSpacing: 0.0,
-                          children: (story['tags'] as List<dynamic>)
-                              .map((tag) {
+                          children: (story['tags'] as List<dynamic>).map((tag) {
                             final Map<String, dynamic> tagMap =
                                 tag as Map<String, dynamic>;
                             return Chip(
                               label: Text(
                                 tagMap['name'],
                                 style: const TextStyle(
-                                    fontSize: 8,
-                                    color: Colors.white),
+                                  fontSize: 8,
+                                  color: Colors.white,
+                                ),
                               ),
                               backgroundColor: const Color(0xFF333333),
-                              padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 0),
-                              labelPadding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: -3.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 1,
+                                vertical: 0,
+                              ),
+                              labelPadding: const EdgeInsets.symmetric(
+                                horizontal: 4.0,
+                                vertical: -3.0,
+                              ),
                               materialTapTargetSize:
                                   MaterialTapTargetSize.shrinkWrap,
                               visualDensity: const VisualDensity(
-                                  horizontal: -2.0, vertical: -4.0),
+                                horizontal: -2.0,
+                                vertical: -4.0,
+                              ),
                               // padding: EdgeInsets.zero,
                             );
                           }).toList(),

@@ -7,11 +7,12 @@ import 'package:soma/core/widgets/stories/story_unlock_card.dart';
 import 'package:soma/core/widgets/guest_registration_card.dart';
 import 'package:soma/features/story_detail_page/viewmodels/story_detail_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:soma/data/story_repository.dart';
-import 'package:soma/data/user_repository.dart';
+import 'package:soma/core/services/story_repository.dart';
+import 'package:soma/core/services/user_repository.dart';
 import 'package:http/http.dart' as http;
 import 'package:soma/features/author_profile_page/views/author_profile_page.dart';
 import 'package:soma/core/config/environment.dart';
+import 'package:soma/core/widgets/show_toast.dart';
 
 class StoryDetailPage extends StatefulWidget {
   final Map<String, dynamic> story;
@@ -45,6 +46,8 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
       // After dependencies are initialized, fetch data
       _initializeData();
     });
+
+    _fetchStoryDetails();
   }
 
   Future<void> _initializeDependencies() async {
@@ -126,28 +129,32 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     setState(() {
       _isUnlocking = true;
     });
-    final String? token = _prefs.getString('jwt_token');
-    if (token == null) {
-      _showSnackBar('Authentication token not found. Please log in.');
-      setState(() {
-        _isUnlocking = false;
-      });
-      return;
-    }
 
-    final String storyId = widget.story['_id'];
     try {
-      await _storyRepository.unlockStory(storyId, token);
-      _showSnackBar(
-        'Story unlocked successfully!',
-        backgroundColor: Colors.green.shade200,
+      final token = await SharedPreferences.getInstance().then(
+        (prefs) => prefs.getString('jwt_token'),
       );
+      if (token == null) {
+        throw Exception('Authentication token not found.');
+      }
+
+      await _storyRepository.unlockStory(widget.story['_id'], token);
+
+      // Fetch the full story details after unlocking
+      final fullStoryDetails = await _storyRepository.fetchStoryById(
+        widget.story['_id'],
+        token,
+      );
+
       setState(() {
+        widget.story.addAll(fullStoryDetails);
         _isStoryUnlocked = true;
       });
-      _fetchCurrentUserTokens();
+
+      // Show success message
+      showToast(context, 'Story unlocked successfully!', type: ToastType.success);
     } catch (e) {
-      _showSnackBar('Failed to unlock story: $e');
+      print('Error unlocking story: $e');
     } finally {
       setState(() {
         _isUnlocking = false;
@@ -196,6 +203,32 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
       }
     } catch (e) {
       _showSnackBar('An error occurred while upvoting: $e');
+    }
+  }
+
+  Future<void> _fetchStoryDetails() async {
+    try {
+      final token = await SharedPreferences.getInstance().then(
+        (prefs) => prefs.getString('jwt_token'),
+      );
+      if (token == null) {
+        throw Exception('Authentication token not found.');
+      }
+
+      final storyDetails = await _storyRepository.fetchStoryById(
+        widget.story['_id'],
+        token,
+      );
+
+      setState(() {
+        widget.story.addAll(storyDetails);
+        _isDataLoaded = true;
+      });
+    } catch (e) {
+      print('Error fetching story details: $e');
+      setState(() {
+        _isDataLoaded = false;
+      });
     }
   }
 
@@ -392,9 +425,10 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                               },
                             )
                           else if (!_isStoryUnlocked && !isMyStory) ...[
-                            if (_currentUserTokens < 1)
+                            if (_currentUserTokens < widget.story['tokenPrice'])
                               StoryUnlockCard(
                                 cardType: UnlockCardType.topUp,
+                                neededTokens: widget.story['tokenPrice'],
                                 onButtonPressed: () {
                                   _handleTopUp();
                                 },
@@ -403,6 +437,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                             else
                               StoryUnlockCard(
                                 cardType: UnlockCardType.unlock,
+                                neededTokens: widget.story['tokenPrice'],
                                 onButtonPressed: () {
                                   _handleUnlockStory();
                                 },

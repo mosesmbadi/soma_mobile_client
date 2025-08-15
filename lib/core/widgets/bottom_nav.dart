@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soma/core/widgets/nav_warning_card.dart';
 import 'package:soma/core/widgets/show_toast.dart';
-import 'package:soma/data/user_repository.dart';
+import 'package:soma/core/services/user_repository.dart';
 import 'package:soma/core/exceptions/auth_exception.dart';
 import 'package:soma/features/home_page/viewmodels/home_page_viewmodel.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:soma/data/user_repository.dart';
-import 'package:soma/data/offer_repository.dart';
+import 'package:soma/core/services/user_repository.dart';
+import 'package:soma/core/services/offer_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -15,7 +15,7 @@ class StoryUnlockCard extends StatefulWidget {
 
   const StoryUnlockCard({
     super.key,
-    this.neededTokens = 1,
+    required this.neededTokens,
     required this.cardType,
     required this.onButtonPressed,
     this.isLoading = false,

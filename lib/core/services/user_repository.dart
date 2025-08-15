@@ -1,8 +1,8 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../core/config/environment.dart';
-import '../core/exceptions/auth_exception.dart'; // Import the custom exception
+import '../config/environment.dart';
+import '../exceptions/auth_exception.dart'; // Import the custom exception
 
 class UserRepository {
   final http.Client _client;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../data/story_repository.dart';
-import '../../../data/trending_story_repository.dart';
+import '../../../core/services/story_repository.dart';
+import '../../../core/services/trending_story_repository.dart';
 
 class HomePageViewModel extends ChangeNotifier {
   final StoryRepository _storyRepository = StoryRepository();

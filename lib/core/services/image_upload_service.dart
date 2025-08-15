@@ -22,7 +22,7 @@ class ImageUploadService {
 
     if (response.statusCode == 200) {
       final responseData = await http.Response.fromStream(response);
-      final imageUrl = responseData.body; // Assuming backend returns JSON with imageUrl
+      final imageUrl = responseData.body; // backend returns JSON with imageUrl
       // Parse the JSON response to extract the imageUrl
       final Map<String, dynamic> jsonResponse = jsonDecode(imageUrl);
       return jsonResponse['imageUrl'];
