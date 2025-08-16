@@ -81,9 +81,7 @@ class _ProfilePageState extends State<ProfilePage>
 
     return MultiProvider(
       providers: [
-        Provider<AnalyticsRepository>(
-          create: (_) => AnalyticsRepository(),
-        ),
+        Provider<AnalyticsRepository>(create: (_) => AnalyticsRepository()),
       ],
       child: ChangeNotifierProvider<ProfilePageViewModel>.value(
         value: _viewModel,

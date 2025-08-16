@@ -24,4 +24,19 @@ class OfferRepository {
       throw Exception('Failed to fetch offers.');
     }
   }
+
+  Future<void> topUpAccount(String token, Map<String, dynamic> payload) async {
+    final response = await client.post(
+      Uri.parse('${Environment.backendUrl}/api/mpesa/top-up'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to top up account: ${response.body}');
+    }
+  }
 }
